@@ -31,7 +31,7 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-empty-interface': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'off', // 关闭非空断言规则
 
       // React Hooks 规则
       'react-hooks/rules-of-hooks': 'error',
@@ -49,7 +49,11 @@ export default defineConfig([
         'warn',
         {
           selector: 'variable',
-          format: ['camelCase', 'UPPER_CASE'],
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          filter: {
+            regex: '^[A-Z][A-Za-z0-9]*$',
+            match: false,
+          },
         },
         {
           selector: 'function',

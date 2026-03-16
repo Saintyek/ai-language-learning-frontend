@@ -1,17 +1,29 @@
 import Banner from './components/Banner'
 import Features from './components/Features'
 import Courses from './components/Courses'
-import LearningStats from './components/LearningStats'
+import Reasons from './components/Reasons'
+import Languages from './components/Languages'
 import Feedbacks from './components/Feedbacks'
 
 const Home = () => {
   return (
     <div>
       <Banner />
-      <Features />
-      <Courses />
-      <LearningStats />
-      <Feedbacks />
+      <div id="reasons">
+        <Reasons />
+      </div>
+      <div id="features">
+        <Features />
+      </div>
+      <div id="languages">
+        <Languages />
+      </div>
+      <div id="courses">
+        <Courses />
+      </div>
+      <div id="feedbacks">
+        <Feedbacks />
+      </div>
     </div>
   )
 }

@@ -1,13 +1,43 @@
-import React from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Button } from 'antd'
 
 const Navbar: React.FC = () => {
-  const menuItems = [
-    { key: '1', label: '首页' },
-    { key: '2', label: '功能' },
-    { key: '3', label: '课程' },
-    { key: '4', label: '关于我们' },
-  ]
+  const menuItems = useMemo(
+    () => [
+      { key: 'reasons', label: '为什么选择我们', href: '#reasons' },
+      { key: 'features', label: '功能', href: '#features' },
+      { key: 'languages', label: '语言', href: '#languages' },
+      { key: 'courses', label: '课程', href: '#courses' },
+      { key: 'feedbacks', label: '用户评价', href: '#feedbacks' },
+    ],
+    []
+  )
+
+  const [activeKey, setActiveKey] = useState('')
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100
+
+      for (const item of menuItems) {
+        const element = document.getElementById(item.key)
+        if (element) {
+          const { offsetTop, offsetHeight } = element
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveKey(item.key)
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // 初始化时检查一次
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [menuItems])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
@@ -19,8 +49,12 @@ const Navbar: React.FC = () => {
           {menuItems.map(item => (
             <a
               key={item.key}
-              href={`#${item.key}`}
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
+              href={item.href}
+              className={`transition-colors duration-300 ${
+                activeKey === item.key
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
             >
               {item.label}
             </a>

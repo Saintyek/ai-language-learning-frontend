@@ -36,10 +36,10 @@ const Feedbacks = () => {
   ]
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-36 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">用户见证</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">用户评价</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             听听我们的用户如何通过AI语言学习平台实现他们的学习目标
           </p>

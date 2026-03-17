@@ -1,14 +1,18 @@
+import React from 'react'
+import { BrowserRouter as Router } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Home from './pages/Home'
+import AppRoutes from './routes/Routes'
 import Footer from './components/Footer'
 
 function App() {
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <Home />
-      <Footer />
-    </div>
+    <Router>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <AppRoutes />
+        <Footer />
+      </div>
+    </Router>
   )
 }
 

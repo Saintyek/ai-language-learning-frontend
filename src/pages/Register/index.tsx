@@ -1,21 +1,28 @@
 import React, { useState } from 'react'
 import { Button, Input, Form, Alert } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { register, saveAuthData } from '@/api/auth'
+import type { RegisterParams } from '@/api/auth'
 
-const Signup: React.FC = () => {
+const Register: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form] = Form.useForm()
+  const navigate = useNavigate()
 
-  const onFinish = async () => {
+  const onFinish = async (values: RegisterParams) => {
     setLoading(true)
     setError(null)
 
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // 这里可以添加注册成功后的跳转逻辑
-    } catch {
-      setError('注册失败，请稍后重试')
+      // 调用注册 API
+      const response = await register(values)
+      // 保存 token 和用户信息
+      saveAuthData(response.token, response.userInfo)
+      // 注册成功，跳转到首页
+      navigate('/')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '注册失败，请稍后重试')
     } finally {
       setLoading(false)
     }
@@ -115,4 +122,4 @@ const Signup: React.FC = () => {
   )
 }
 
-export default Signup
+export default Register

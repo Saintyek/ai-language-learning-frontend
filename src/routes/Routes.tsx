@@ -1,5 +1,5 @@
 import { useRoutes } from 'react-router-dom'
-import routes from './index.tsx'
+import routes from '@/routes/index.tsx'
 
 const AppRoutes = () => {
   const element = useRoutes(routes)

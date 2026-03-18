@@ -134,7 +134,7 @@ const Navbar: React.FC = () => {
               window.scrollTo({ top: 0, behavior: 'instant' })
               // 延迟导航，确保状态更新
               setTimeout(() => {
-                navigate('/signup')
+                navigate('/register')
               }, 10)
             }}
           >

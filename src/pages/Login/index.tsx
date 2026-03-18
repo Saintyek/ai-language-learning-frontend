@@ -1,21 +1,28 @@
 import React, { useState } from 'react'
 import { Button, Checkbox, Input, Form, Alert } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { login, saveAuthData } from '@/api/auth'
+import type { LoginParams } from '@/api/auth'
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form] = Form.useForm()
+  const navigate = useNavigate()
 
-  const onFinish = async (_values: any) => {
+  const onFinish = async (values: LoginParams) => {
     setLoading(true)
     setError(null)
 
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // 这里可以添加登录成功后的跳转逻辑
-    } catch {
-      setError('登录失败，请检查用户名和密码')
+      // 调用登录 API
+      const response = await login(values)
+      // 保存 token 和用户信息
+      saveAuthData(response.token, response.userInfo)
+      // 登录成功，跳转到首页
+      navigate('/')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '登录失败，请检查邮箱和密码')
     } finally {
       setLoading(false)
     }
@@ -30,13 +37,13 @@ const Login: React.FC = () => {
             <p className="mt-2 text-sm text-gray-600">
               或{' '}
               <a
-                href="/signup"
+                href="/register"
                 onClick={e => {
                   e.preventDefault()
                   // 立即重置页面滚动位置
                   window.scrollTo({ top: 0, behavior: 'instant' })
                   // 导航到注册页面
-                  window.location.href = '/signup'
+                  window.location.href = '/register'
                 }}
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300"
               >
@@ -51,7 +58,13 @@ const Login: React.FC = () => {
         )}
 
         <Form form={form} onFinish={onFinish} className="mt-8 space-y-6 animate-fade-in">
-          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名或邮箱' }]}>
+          <Form.Item 
+            name="email" 
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '请输入有效的邮箱地址' }
+            ]}
+          >
             <Input placeholder="请输入邮箱" className="rounded-lg" />
           </Form.Item>
 

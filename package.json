@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "antd": "^6.3.2",
+    "axios": "^1.13.6",
     "flag-icons": "^7.5.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

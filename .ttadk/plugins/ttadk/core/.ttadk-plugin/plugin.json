@@ -1,0 +1,34 @@
+{
+  "name": "ttadk/core",
+  "display_name": "TTADK SDD Workflow",
+  "version": "1.0.0",
+  "description": "TTADK SDD workflow commands and MCP configs",
+  "author": {"name": "ttadk", "email": "ttadk@bytedance.com"},
+  "tags": [
+    "sdd",
+    "adk"
+  ],
+  "commands": [
+    {"name": "plan", "path": "adk/sdd/plan.md"},
+    {"name": "specify", "path": "adk/sdd/specify.md"},
+    {"name": "tasks", "path": "adk/sdd/tasks.md"},
+    {"name": "implement", "path": "adk/sdd/implement.md"},
+    {"name": "clarify", "path": "adk/sdd/clarify.md"},
+    {"name": "analyze", "path": "adk/sdd/analyze.md"},
+    {"name": "commit", "path": "adk/commit.md"},
+    {"name": "archive", "path": "adk/sdd/archive.md"},
+    {"name": "constitution", "path": "adk/sdd/constitution.md"},
+    {"name": "ff", "path": "adk/sdd/ff.md"},
+    {"name": "erd", "path": "adk/sdd/erd.md"},
+    {"name": "readiness", "path": "adk/readiness.md"},
+    {"name": "help", "path": "adk/help.md"},
+    {"name": "brainstorm", "path": "adk/sdd/brainstorm.md"}
+  ],
+  "skills": [
+    {"name": "ttadk-knowledge", "path": "ttadk-knowledge"}
+  ],
+  "mcps": [
+    {"name": "lark_docs", "path": "lark_docs.json"},
+    {"name": "tiksearch", "path": "tiksearch.json"}
+  ]
+}

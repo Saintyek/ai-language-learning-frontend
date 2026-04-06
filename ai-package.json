@@ -1,0 +1,36 @@
+{
+  "skill": {
+    "edenx-knowledge": {
+      "source": "origin"
+    },
+    "gulux-knowledge": {
+      "source": "origin"
+    },
+    "platform-knowledge": {
+      "source": "origin"
+    },
+    "semi-ui-knowledge": {
+      "source": "origin"
+    },
+    "ttadk-knowledge": {
+      "source": "origin"
+    },
+    "ui-ux-pro-max": {
+      "source": "origin"
+    }
+  },
+  "mcp": {
+    "lark-docs": {
+      "source": "origin"
+    },
+    "tika": {
+      "source": "origin"
+    },
+    "semi-mcp": {
+      "source": "origin"
+    },
+    "playwright": {
+      "source": "origin"
+    }
+  }
+}

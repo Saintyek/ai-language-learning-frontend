@@ -1,4 +1,4 @@
-import { Card, Button } from 'antd'
+import { Card, Button } from '@douyinfe/semi-ui-19'
 
 interface CourseItem {
   title: string
@@ -58,7 +58,8 @@ const Courses = () => {
           {courses.map((course, index) => (
             <Card
               key={index}
-              className="overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              shadows="hover"
+              className="overflow-hidden transition-shadow duration-300"
             >
               <div className="h-48 overflow-hidden">
                 <img
@@ -76,7 +77,7 @@ const Courses = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">{course.title}</h3>
                 <p className="text-gray-600 mb-4">{course.description}</p>
-                <Button className="w-full text-blue-600 border-blue-600 hover:bg-blue-50">
+                <Button theme="outline" className="w-full text-blue-600 border-blue-600 hover:bg-blue-50">
                   查看详情
                 </Button>
               </div>

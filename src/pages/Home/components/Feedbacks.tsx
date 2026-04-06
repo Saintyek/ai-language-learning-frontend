@@ -1,4 +1,4 @@
-import { Avatar, Card } from 'antd'
+import { Avatar, Card } from '@douyinfe/semi-ui-19'
 
 interface TestimonialItem {
   name: string
@@ -49,13 +49,14 @@ const Feedbacks = () => {
           {testimonials.map((testimonial, index) => (
             <Card
               key={index}
-              className="shadow-sm hover:shadow-md transition-shadow duration-300 bg-white"
+              shadows="hover"
+              className="transition-shadow duration-300 bg-white"
             >
               <div className="p-6">
                 <div className="text-yellow-400 mb-4">{'★★★★★'}</div>
                 <p className="text-gray-600 mb-6 italic">"{testimonial.content}"</p>
                 <div className="flex items-center">
-                  <Avatar size={64} src={testimonial.avatar} />
+                  <Avatar size="extra-large" src={testimonial.avatar} alt={testimonial.name} />
                   <div className="ml-4">
                     <h4 className="font-semibold text-gray-800">{testimonial.name}</h4>
                     <p className="text-gray-500 text-sm">{testimonial.role}</p>

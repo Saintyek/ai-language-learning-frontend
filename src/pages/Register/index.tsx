@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Input, Form, Alert } from 'antd'
+import { Banner, Button, Form } from '@douyinfe/semi-ui-19'
 import { useNavigate } from 'react-router-dom'
 import { register, saveAuthData } from '@/api/auth'
 import type { RegisterParams } from '@/api/auth'
@@ -7,19 +7,15 @@ import type { RegisterParams } from '@/api/auth'
 const Register: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [form] = Form.useForm()
   const navigate = useNavigate()
 
-  const onFinish = async (values: RegisterParams) => {
+  const onSubmit = async (values: RegisterParams) => {
     setLoading(true)
     setError(null)
 
     try {
-      // 调用注册 API
       const response = await register(values)
-      // 保存 token 和用户信息
       saveAuthData(response.token, response.userInfo)
-      // 注册成功，跳转到首页
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败，请稍后重试')
@@ -40,9 +36,7 @@ const Register: React.FC = () => {
                 href="/login"
                 onClick={e => {
                   e.preventDefault()
-                  // 立即重置页面滚动位置
                   window.scrollTo({ top: 0, behavior: 'instant' })
-                  // 导航到登录页面
                   window.location.href = '/login'
                 }}
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300"
@@ -54,68 +48,82 @@ const Register: React.FC = () => {
         </div>
 
         {error && (
-          <Alert title="注册错误" description={error} type="error" showIcon className="mb-4" />
+          <Banner
+            fullMode={false}
+            bordered
+            type="danger"
+            title="注册错误"
+            description={error}
+            closeIcon={null}
+            className="mb-4"
+          />
         )}
 
-        <Form form={form} onFinish={onFinish} className="mt-8 space-y-6 animate-fade-in">
-          <Form.Item
-            name="username"
+        <Form
+          onSubmit={(values: RegisterParams) => onSubmit(values)}
+          className="mt-8 space-y-6 animate-fade-in"
+        >
+          <Form.Input
+            field="username"
+            noLabel
+            placeholder="请输入用户名"
+            className="rounded-lg"
             rules={[
               { required: true, message: '请输入用户名' },
               { min: 3, message: '用户名至少需要3个字符' },
             ]}
-          >
-            <Input placeholder="请输入用户名" className="rounded-lg" />
-          </Form.Item>
+          />
 
-          <Form.Item
-            name="email"
+          <Form.Input
+            field="email"
+            noLabel
+            type="email"
+            placeholder="请输入邮箱"
+            className="rounded-lg"
             rules={[
               { required: true, message: '请输入邮箱' },
               { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
-          >
-            <Input type="email" placeholder="请输入邮箱" className="rounded-lg" />
-          </Form.Item>
+          />
 
-          <Form.Item
-            name="password"
+          <Form.Input
+            field="password"
+            noLabel
+            mode="password"
+            placeholder="请设置密码"
+            className="rounded-lg"
             rules={[
               { required: true, message: '请设置密码' },
               { min: 6, message: '密码至少需要6个字符' },
             ]}
-          >
-            <Input.Password placeholder="请设置密码" className="rounded-lg" />
-          </Form.Item>
+          />
 
-          <Form.Item
-            name="confirmPassword"
-            dependencies={['password']}
-            rules={[
-              { required: true, message: '请确认密码' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) {
-                    return Promise.resolve()
-                  }
-                  return Promise.reject(new Error('两次输入的密码不一致'))
-                },
-              }),
-            ]}
-          >
-            <Input.Password placeholder="请确认密码" className="rounded-lg" />
-          </Form.Item>
+          <Form.Input
+            field="confirmPassword"
+            noLabel
+            mode="password"
+            placeholder="请确认密码"
+            className="rounded-lg"
+            validate={(value, values) => {
+              if (!value) {
+                return '请确认密码'
+              }
+              if (value !== values.password) {
+                return '两次输入的密码不一致'
+              }
+              return ''
+            }}
+          />
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-300"
-            >
-              注册
-            </Button>
-          </Form.Item>
+          <Button
+            theme="solid"
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-300"
+          >
+            注册
+          </Button>
         </Form>
       </div>
     </div>

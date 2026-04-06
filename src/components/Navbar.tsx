@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Button } from 'antd'
+import { Button } from '@douyinfe/semi-ui-19'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const Navbar: React.FC = () => {
@@ -110,6 +110,7 @@ const Navbar: React.FC = () => {
         {/* 登录/注册按钮 */}
         <div className="hidden md:flex space-x-4">
           <Button
+            theme="outline"
             className="text-blue-600 border-blue-600 hover:bg-blue-50"
             onClick={() => {
               // 清空导航栏选中样式
@@ -125,6 +126,7 @@ const Navbar: React.FC = () => {
             登录
           </Button>
           <Button
+            theme="solid"
             type="primary"
             className="bg-blue-600 hover:bg-blue-700"
             onClick={() => {

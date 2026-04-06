@@ -1,4 +1,4 @@
-import { Button } from 'antd'
+import { Button } from '@douyinfe/semi-ui-19'
 
 const Banner = () => {
   return (
@@ -15,6 +15,7 @@ const Banner = () => {
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Button
+                theme="solid"
                 type="primary"
                 size="large"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full"
@@ -22,6 +23,7 @@ const Banner = () => {
                 开始免费试用
               </Button>
               <Button
+                theme="outline"
                 size="large"
                 className="border border-gray-300 hover:bg-gray-50 px-8 py-3 rounded-full"
               >

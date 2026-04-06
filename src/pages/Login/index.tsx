@@ -1,25 +1,28 @@
 import React, { useState } from 'react'
-import { Button, Checkbox, Input, Form, Alert } from 'antd'
+import { Banner, Button, Form } from '@douyinfe/semi-ui-19'
 import { useNavigate } from 'react-router-dom'
 import { login, saveAuthData } from '@/api/auth'
 import type { LoginParams } from '@/api/auth'
 
+interface LoginFormValues extends LoginParams {
+  remember?: boolean
+}
+
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [form] = Form.useForm()
   const navigate = useNavigate()
 
-  const onFinish = async (values: LoginParams) => {
+  const onSubmit = async (values: LoginFormValues) => {
     setLoading(true)
     setError(null)
 
     try {
-      // 调用登录 API
-      const response = await login(values)
-      // 保存 token 和用户信息
+      const response = await login({
+        email: values.email,
+        password: values.password,
+      })
       saveAuthData(response.token, response.userInfo)
-      // 登录成功，跳转到首页
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败，请检查邮箱和密码')
@@ -40,9 +43,7 @@ const Login: React.FC = () => {
                 href="/register"
                 onClick={e => {
                   e.preventDefault()
-                  // 立即重置页面滚动位置
                   window.scrollTo({ top: 0, behavior: 'instant' })
-                  // 导航到注册页面
                   window.location.href = '/register'
                 }}
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300"
@@ -54,28 +55,47 @@ const Login: React.FC = () => {
         </div>
 
         {error && (
-          <Alert title="登录错误" description={error} type="error" showIcon className="mb-4" />
+          <Banner
+            fullMode={false}
+            bordered
+            type="danger"
+            title="登录错误"
+            description={error}
+            closeIcon={null}
+            className="mb-4"
+          />
         )}
 
-        <Form form={form} onFinish={onFinish} className="mt-8 space-y-6 animate-fade-in">
-          <Form.Item 
-            name="email" 
+        <Form
+          initValues={{ remember: false }}
+          onSubmit={(values: any) => onSubmit(values as LoginFormValues)}
+          className="mt-8 space-y-6 animate-fade-in"
+        >
+          <Form.Input
+            field="email"
+            noLabel
+            type="email"
+            placeholder="请输入邮箱"
+            className="rounded-lg"
             rules={[
               { required: true, message: '请输入邮箱' },
-              { type: 'email', message: '请输入有效的邮箱地址' }
+              { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
-          >
-            <Input placeholder="请输入邮箱" className="rounded-lg" />
-          </Form.Item>
+          />
 
-          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password placeholder="请输入密码" className="rounded-lg" />
-          </Form.Item>
+          <Form.Input
+            field="password"
+            noLabel
+            mode="password"
+            placeholder="请输入密码"
+            className="rounded-lg"
+            rules={[{ required: true, message: '请输入密码' }]}
+          />
 
           <div className="flex items-center justify-between">
-            <Form.Item name="remember" valuePropName="checked">
-              <Checkbox className="text-gray-700">记住我</Checkbox>
-            </Form.Item>
+            <Form.Checkbox field="remember" noLabel className="text-gray-700">
+              记住我
+            </Form.Checkbox>
 
             <div className="text-sm">
               <a
@@ -87,16 +107,15 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-300"
-            >
-              登录
-            </Button>
-          </Form.Item>
+          <Button
+            theme="solid"
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-300"
+          >
+            登录
+          </Button>
         </Form>
       </div>
     </div>

@@ -1,8 +1,16 @@
 ---
-description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
-
+name: adk-sdd-tasks
+description: "Use when the user wants to break approved specs and plans into `tasks.md`, user-story-based task lists, or executable implementation steps; do not use for casual todo lists."
 ---
 
+# ADK SDD Tasks
+
+This skill is an SDD stage skill for breaking work into executable tasks. It is suitable for turning confirmed specifications and plans into `tasks.md`.
+
+## Manual Trigger Constraints
+
+- Use this skill only when the user explicitly wants to break work into tasks, generate `tasks.md`, or organize executable implementation steps.
+- Do not automatically map a generic "make me a todo list" request to this skill.
 
 ```text
 $ARGUMENTS

@@ -1,7 +1,16 @@
 ---
-description: Execute the implementation planning workflow using the plan template to generate design artifacts.
-
+name: adk-sdd-plan
+description: "Use when the user already has a spec and wants an implementation plan, research, contracts, or other planning artifacts for the next SDD stage; do not use for direct implementation requests."
 ---
+
+# ADK SDD Plan
+
+This skill is an SDD stage skill for generating implementation-planning artifacts. It is suitable for continuing from an existing `spec.md` to produce `plan.md` and related planning documents.
+
+## Manual Trigger Constraints
+
+- Use this skill only when the user explicitly wants to create an implementation plan, research findings, interface contracts, or other planning artifacts.
+- If `spec.md` still contains key ambiguities, use `adk-sdd-clarify` first.
 
 ## User Input
 

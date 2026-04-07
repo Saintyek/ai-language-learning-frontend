@@ -1,4 +1,4 @@
-import { Card, Button } from '@douyinfe/semi-ui-19'
+import { Card, Button } from '@douyinfe/semi-ui'
 
 interface CourseItem {
   title: string

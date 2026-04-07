@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Button } from '@douyinfe/semi-ui-19'
+import { Button } from '@douyinfe/semi-ui'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const Navbar: React.FC = () => {

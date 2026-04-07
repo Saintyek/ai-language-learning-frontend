@@ -1,6 +1,22 @@
-import { Button } from '@douyinfe/semi-ui-19'
+import { Button, Toast } from '@douyinfe/semi-ui'
+import { useNavigate } from 'react-router-dom'
+import { isAuthenticated } from '@/api/auth'
 
 const Banner = () => {
+  const navigate = useNavigate()
+
+  const handleStartTrial = () => {
+    if (!isAuthenticated()) {
+      Toast.warning({
+        content: '请先登录或注册',
+        duration: 2,
+      })
+      navigate('/login')
+      return
+    }
+    navigate('/languages')
+  }
+
   return (
     <section className="pt-64 pb-48 bg-blue-50 ">
       <div className="container mx-auto px-4">
@@ -19,6 +35,7 @@ const Banner = () => {
                 type="primary"
                 size="large"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full"
+                onClick={handleStartTrial}
               >
                 开始免费试用
               </Button>

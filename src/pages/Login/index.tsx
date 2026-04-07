@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Banner, Button, Form } from '@douyinfe/semi-ui-19'
+import { Banner, Button, Form } from '@douyinfe/semi-ui'
 import { useNavigate } from 'react-router-dom'
 import { login, saveAuthData } from '@/api/auth'
 import type { LoginParams } from '@/api/auth'

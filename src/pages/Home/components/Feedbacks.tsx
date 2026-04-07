@@ -1,4 +1,4 @@
-import { Avatar, Card } from '@douyinfe/semi-ui-19'
+import { Avatar, Card } from '@douyinfe/semi-ui'
 
 interface TestimonialItem {
   name: string

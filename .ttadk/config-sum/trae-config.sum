@@ -9,8 +9,8 @@
       "name": "ttadk/core",
       "git_repo": "git@code.byted.org:tiktok/ttadk_plugin_market.git",
       "branch": "master",
-      "commit": "41fc9860bd91a52b62246654afe5c3357e76599f",
-      "updated_at": "2026-04-04T17:04:46.249Z"
+      "commit": "7c0399e3330d5ec79b82637656ac5d66a97621d0",
+      "updated_at": "2026-04-07T15:13:21.235Z"
     },
     {
       "name": "ttadk/frontend-platform",

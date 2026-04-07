@@ -25,7 +25,21 @@
     {"name": "brainstorm", "path": "adk/sdd/brainstorm.md"}
   ],
   "skills": [
-    {"name": "ttadk-knowledge", "path": "ttadk-knowledge"}
+    {"name": "ttadk-knowledge", "path": "ttadk-knowledge"},
+    {"name": "adk-help", "path": "adk-help"},
+    {"name": "adk-sdd-analyze", "path": "adk-sdd-analyze"},
+    {"name": "adk-sdd-archive", "path": "adk-sdd-archive"},
+    {"name": "adk-commit", "path": "adk-commit"},
+    {"name": "adk-sdd-constitution", "path": "adk-sdd-constitution"},
+    {"name": "adk-sdd-erd", "path": "adk-sdd-erd"},
+    {"name": "adk-sdd-implement", "path": "adk-sdd-implement"},
+    {"name": "adk-sdd-plan", "path": "adk-sdd-plan"},
+    {"name": "adk-sdd-specify", "path": "adk-sdd-specify"},
+    {"name": "adk-sdd-tasks", "path": "adk-sdd-tasks"},
+    {"name": "adk-sdd-clarify", "path": "adk-sdd-clarify"},
+    {"name": "adk-sdd-brainstorm", "path": "adk-sdd-brainstorm"},
+    {"name": "adk-sdd-ff", "path": "adk-sdd-ff"},
+    {"name": "adk-readiness", "path": "adk-readiness"}
   ],
   "mcps": [
     {"name": "lark_docs", "path": "lark_docs.json"},

@@ -19,6 +19,8 @@
 
 扫描仓库的 AI Coding 就绪度，输出多维度成熟度报告与改进建议。
 
+**对应 skill**：`adk-readiness`
+
 **用法**：`/adk:readiness [可选参数说明]`
 
 **典型输入**：
@@ -28,9 +30,9 @@
 - `/adk:readiness target L3`
 
 **适用场景**：
-- 刚接手一个仓库，想知道是否适合 AI 开发
-- 想补齐文档、测试、规范、CI 等短板
-- 想量化改造前后的 readiness 提升
+- 刚接手一个仓库，想知道是否适合 AI 开发。
+- 想补齐文档、测试、规范、CI 等短板。
+- 想量化改造前后的 readiness 提升。
 
 ---
 
@@ -41,29 +43,11 @@
 **用法**：`/adk:commit`
 
 **重要说明**：
-- 推荐使用 `/adk:commit` 以确保 AI 代码贡献率被统计
-- 如果存在远端，会尝试 push；如果 push 失败，会保留本地 commit 并提示用户手动处理
-- 不会在 commit 流程中修改代码
+- 推荐使用 `/adk:commit` 以确保 AI 代码贡献率被统计。
+- 如果存在远端，会尝试 push；如果 push 失败，会保留本地 commit 并提示用户手动处理。
+- 不会在 commit 流程中修改代码。
 
 ---
-
-### /adk:cloud
-
-TTADK Cloud 自然语言入口，用于创建、查看、继续、停止、同步云端异步任务。
-
-**用法**：`/adk:cloud <自然语言意图>`
-
-**示例**：
-- `/adk:cloud 查看一下最新的任务状态`
-- `/adk:cloud 基于最新的 Spec 发起一个云端 SDD 任务`
-- `/adk:cloud 停掉最近一个 running 的任务`
-- `/adk:cloud 同步刚完成的云端任务到本地`
-
-**典型能力**：
-- 发起 cloud handoff
-- 查看任务列表 / 任务详情
-- 停止或继续任务
-- 同步结果到本地分支
 
 ## SDD 命令
 
@@ -74,13 +58,17 @@ TTADK Cloud 自然语言入口，用于创建、查看、继续、停止、同�
 **用法**：`/adk:sdd:brainstorm <想法、资料或链接>`
 
 **适用场景**：
-- 需求还很模糊，需要先拆模块和讨论方案
-- 已有 ERD / 学习资料，希望先沉淀成技术思路
-- 想先比较 2-3 套方案，再进入正式 spec
+- 需求还很模糊，需要先拆模块和讨论方案。
+- 已有 ERD / 学习资料，希望先沉淀成技术思路。
+- 想先比较 2 到 3 套方案，再进入正式 spec。
+
+---
 
 ### /adk:sdd:ff
 
 Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核心制品。
+
+**对应 skill**：`adk-sdd-ff`
 
 **用法**：`/adk:sdd:ff <功能描述或飞书文档链接>`
 
@@ -90,9 +78,9 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 - `tasks.md`
 
 **适用场景**：
-- 需求边界清楚，希望快速推进
-- 已经过 brainstorm，方案已经比较明确
-- 需要用最短路径进入实现阶段
+- 需求边界清楚，希望快速推进。
+- 已经过 brainstorm，方案已经比较明确。
+- 需要用最短路径进入实现阶段。
 
 ---
 
@@ -121,7 +109,7 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 - `/adk:sdd:specify 构建一个支持邮件和站内信渠道的用户通知系统`
 - `/adk:sdd:specify https://lark-doc-link-to-prd`
 
-**前置条件**：通常无，是功能规格阶段的第一个核心命令
+**前置条件**：通常无，是功能规格阶段的第一个核心命令。
 
 **产出**：`specs/YYYYMMDD-feature-name/spec.md`
 
@@ -137,12 +125,12 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 - `/adk:sdd:clarify`
 - `/adk:sdd:clarify 聚焦安全性需求`
 
-**前置条件**：`spec.md` 必须存在
+**前置条件**：`spec.md` 必须存在。
 
 **行为**：
-- 每次提出最多 5 个针对性问题逐一交互
-- 每个回答被接受后更新 `spec.md`
-- 如果 `plan.md`、`technical-design.md`、`tasks.md` 已存在，也会同步更新
+- 每次提出最多 5 个针对性问题逐一交互。
+- 每个回答被接受后更新 `spec.md`。
+- 如果 `plan.md`、`technical-design.md`、`tasks.md` 已存在，也会同步更新。
 
 ---
 
@@ -152,7 +140,7 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 **用法**：`/adk:sdd:plan [可选的约束条件]`
 
-**前置条件**：`spec.md` 必须存在
+**前置条件**：`spec.md` 必须存在。
 
 **产出**：
 - `plan.md`
@@ -169,7 +157,7 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 **用法**：`/adk:sdd:erd [可选的聚焦领域]`
 
-**前置条件**：通常需要 `spec.md`，复杂场景建议已有 `plan.md`
+**前置条件**：通常需要 `spec.md`，复杂场景建议已有 `plan.md`。
 
 **产出**：`technical-design.md`
 
@@ -188,9 +176,9 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 **产出**：`tasks.md`
 
 **特性**：
-- 任务包含 ID、依赖排序、文件路径
-- 支持并行标记 `[P]`
-- 面向实现执行，不是泛泛的 TODO 列表
+- 任务包含 ID、依赖排序、文件路径。
+- 支持并行标记 `[P]`。
+- 面向实现执行，不是泛泛的 TODO 列表。
 
 ---
 
@@ -202,11 +190,11 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 **前置条件**：`spec.md` + `plan.md` + `tasks.md`
 
-**产出**：分析报告（输出到终端，不保存文件）
+**产出**：分析报告（输出到终端，不保存文件）。
 
 **重点**：
-- 发现规格遗漏、术语漂移、任务覆盖不足、与宪章冲突等问题
-- 这是制品质量检查，不是代码修改命令
+- 发现规格遗漏、术语漂移、任务覆盖不足、与宪章冲突等问题。
+- 这是制品质量检查，不是代码修改命令。
 
 ---
 
@@ -235,38 +223,8 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 - `/adk:sdd:archive --json`
 
 **适用场景**：
-- 功能已经完成，想精简 `specs/` 目录
-- 想保留归档记录，但减少活跃制品干扰
-
-## SDT 命令
-
-### /adk:sdt:ff
-
-基于现有需求制品快速生成测试 Case、测试计划等测试侧文档。
-
-**适用场景**：
-- 已有 `spec.md` / `plan.md` / `tasks.md`
-- 需要快速启动测试设计工作
-
----
-
-### /adk:sdt:clarify
-
-对 SDT 产物进行澄清、补充和修正。
-
-**适用场景**：
-- 测试范围不清晰
-- 测试策略、边界条件、验收口径还需要补充
-
----
-
-### /adk:sdt:implement
-
-执行测试用例、跑集成测试，并产出测试报告。
-
-**示例场景**：
-- 后端场景：代码 PPE 部署 + Bam 测试调用 + 报告产出
-- 需要把测试计划真正执行并沉淀结果
+- 功能已经完成，想精简 `specs/` 目录。
+- 想保留归档记录，但减少活跃制品干扰。
 
 ## TTADK CLI 命令
 
@@ -309,17 +267,17 @@ Preset 支持指定分支：`ttadk init -p ttadk/frontend@dev`
 
 ---
 
-### `ttadk cloud`
+### `ttadk handoff`
 
-TTADK Cloud 的底层 CLI，`/adk:cloud` 会基于自然语言自动选择其子命令。
+TTADK 的异步 handoff CLI，用于提交、查看、继续、停止和同步异步任务。
 
 **典型子命令**：
-- `ttadk cloud handoff`
-- `ttadk cloud list`
-- `ttadk cloud detail`
-- `ttadk cloud stop`
-- `ttadk cloud continue`
-- `ttadk cloud sync`
+- `ttadk handoff submit`
+- `ttadk handoff list`
+- `ttadk handoff detail`
+- `ttadk handoff stop`
+- `ttadk handoff continue`
+- `ttadk handoff sync`
 
 ---
 
@@ -370,6 +328,31 @@ TTADK Cloud 的底层 CLI，`/adk:cloud` 会基于自然语言自动选择其子
 
 ## 常用工作流模式
 
+### 基础公共 Skill / Command 对照
+
+| 命令 / 能力 | 对应 skill | 说明 |
+|------------|------------|------|
+| `/adk:readiness` | `adk-readiness` | 评估仓库 readiness |
+| `/adk:help` | `adk-help` | 回答 TTADK、SDD 工作流与当前下一步 |
+| `ttadk handoff *` | 无独立 skill | 通过命令管理 handoff 异步任务 |
+
+### SDD Skill / Command 对照
+
+| 命令 | 对应 skill | 产出/作用 |
+|------|------------|-----------|
+| `/adk:sdd:brainstorm` | `adk-sdd-brainstorm` | 头脑风暴与方案梳理 |
+| `/adk:sdd:ff` | `adk-sdd-ff` | 一步生成 `spec.md`、`plan.md`、`tasks.md` |
+| `/adk:sdd:constitution` | `adk-sdd-constitution` | 维护项目原则 |
+| `/adk:sdd:specify` | `adk-sdd-specify` | 创建 `spec.md` |
+| `/adk:sdd:clarify` | `adk-sdd-clarify` | 澄清并同步设计制品 |
+| `/adk:sdd:plan` | `adk-sdd-plan` | 创建实现计划与设计骨架 |
+| `/adk:sdd:erd` | `adk-sdd-erd` | 生成技术设计文档 |
+| `/adk:sdd:tasks` | `adk-sdd-tasks` | 拆解实现任务 |
+| `/adk:sdd:analyze` | `adk-sdd-analyze` | 只读分析制品质量 |
+| `/adk:sdd:implement` | `adk-sdd-implement` | 执行任务并实现代码 |
+| `/adk:commit` | `adk-commit` | 提交当前改动 |
+| `/adk:sdd:archive` | `adk-sdd-archive` | 归档历史制品 |
+
 ### 完整功能开发
 
 ```bash
@@ -402,20 +385,12 @@ cd my-project && ttadk config && ttadk code
 /adk:commit
 ```
 
-### 测试侧推进
+### 异步 Handoff 协作
 
 ```bash
-/adk:sdt:ff
-/adk:sdt:clarify "补充异常分支和边界条件"
-/adk:sdt:implement
-```
-
-### 云端异步协作
-
-```bash
-/adk:cloud 基于最新的 Spec 发起一个云端 SDD 任务
-/adk:cloud 查看一下最新的任务状态
-/adk:cloud 同步刚完成的任务到本地
+ttadk handoff submit "基于最新的 Spec 继续实现并产出代码"
+ttadk handoff list
+ttadk handoff sync -t <task_id>
 ```
 
 ## 插件开发
@@ -426,7 +401,7 @@ cd my-project && ttadk config && ttadk code
 
 ### 插件结构
 
-```
+```text
 plugins/{namespace}/{plugin_name}/
 ├── .ttadk-plugin/
 │   └── plugin.json              # 插件清单（必需）
@@ -467,12 +442,12 @@ plugins/{namespace}/{plugin_name}/
 
 ### 开发流程
 
-1. 克隆插件市场仓库，新建分支
-2. 在 `plugins/{namespace}/{plugin_name}/` 下创建插件目录
-3. 创建 `.ttadk-plugin/plugin.json`
-4. 按需添加 commands/mcps/skills/agents
-5. 本地测试：`ttadk plugin install {namespace}/{plugin_name} -b feat/xxx`
-6. 测试通过后合码
+1. 克隆插件市场仓库，新建分支。
+2. 在 `plugins/{namespace}/{plugin_name}/` 下创建插件目录。
+3. 创建 `.ttadk-plugin/plugin.json`。
+4. 按需添加 commands / mcps / skills / agents。
+5. 本地测试：`ttadk plugin install {namespace}/{plugin_name} -b feat/xxx`。
+6. 测试通过后合码。
 
 ### 扩展官方命令
 
@@ -480,12 +455,11 @@ plugins/{namespace}/{plugin_name}/
 
 - `commands/adk/my-command.md`
 - `commands/adk/sdd/my-step.md`
-- `commands/adk/sdt/my-step.md`
 
 安装后会与官方命令并列。名称冲突时后安装覆盖先安装。
 
 ### 命名规范
 
-- Namespace 和插件名：仅允许小写字母、数字和下划线
-- Preset 名：仅允许小写字母、数字和下划线
-- 组件的 `compatible_tools` 字段可限制该组件安装到哪些 AI 工具
+- Namespace 和插件名：仅允许小写字母、数字和下划线。
+- Preset 名：仅允许小写字母、数字和下划线。
+- 组件的 `compatible_tools` 字段可限制该组件安装到哪些 AI 工具。

@@ -1,10 +1,38 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Button } from '@douyinfe/semi-ui'
+import { Button, Dropdown } from '@douyinfe/semi-ui'
+import { IconChevronDown } from '@douyinfe/semi-icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { getUserInfo, isAuthenticated, clearAuthData } from '@/api/auth'
 
 const Navbar: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [username, setUsername] = useState('')
+
+  // 检查登录状态
+  useEffect(() => {
+    const checkAuth = () => {
+      const loggedIn = isAuthenticated()
+      setIsLoggedIn(loggedIn)
+      if (loggedIn) {
+        const userInfo = getUserInfo()
+        if (userInfo) {
+          setUsername(userInfo.username)
+        }
+      }
+    }
+    checkAuth()
+    // 监听 storage 事件，以便在其他标签页登录/退出时更新状态
+    window.addEventListener('storage', checkAuth)
+    // 监听登录/退出事件
+    window.addEventListener('authChange', checkAuth)
+    return () => {
+      window.removeEventListener('storage', checkAuth)
+      window.removeEventListener('authChange', checkAuth)
+    }
+  }, [])
+
   const menuItems = useMemo(
     () => [
       { key: 'reasons', label: '为什么选择我们', href: '#reasons' },
@@ -17,6 +45,16 @@ const Navbar: React.FC = () => {
   )
 
   const [activeKey, setActiveKey] = useState('')
+
+  // 退出登录
+  const handleLogout = () => {
+    clearAuthData()
+    setIsLoggedIn(false)
+    setUsername('')
+    // 触发退出登录事件
+    window.dispatchEvent(new Event('authChange'))
+    navigate('/')
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -109,39 +147,64 @@ const Navbar: React.FC = () => {
 
         {/* 登录/注册按钮 */}
         <div className="hidden md:flex space-x-4">
-          <Button
-            theme="outline"
-            className="text-blue-600 border-blue-600 hover:bg-blue-50"
-            onClick={() => {
-              // 清空导航栏选中样式
-              setActiveKey('')
-              // 立即重置页面滚动位置，不使用平滑滚动
-              window.scrollTo({ top: 0, behavior: 'instant' })
-              // 延迟导航，确保状态更新
-              setTimeout(() => {
-                navigate('/login')
-              }, 10)
-            }}
-          >
-            登录
-          </Button>
-          <Button
-            theme="solid"
-            type="primary"
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => {
-              // 清空导航栏选中样式
-              setActiveKey('')
-              // 立即重置页面滚动位置，不使用平滑滚动
-              window.scrollTo({ top: 0, behavior: 'instant' })
-              // 延迟导航，确保状态更新
-              setTimeout(() => {
-                navigate('/register')
-              }, 10)
-            }}
-          >
-            注册
-          </Button>
+          {isLoggedIn ? (
+            <Dropdown
+              trigger="click"
+              position="bottomRight"
+              render={
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={handleLogout}>退出登录</Dropdown.Item>
+                </Dropdown.Menu>
+              }
+            >
+              <span>
+                <Button
+                  icon={<IconChevronDown />}
+                  iconPosition="right"
+                  theme="borderless"
+                  style={{ fontSize: '14px' }}
+                >
+                  你好, {username}
+                </Button>
+              </span>
+            </Dropdown>
+          ) : (
+            <>
+              <Button
+                theme="outline"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                onClick={() => {
+                  // 清空导航栏选中样式
+                  setActiveKey('')
+                  // 立即重置页面滚动位置，不使用平滑滚动
+                  window.scrollTo({ top: 0, behavior: 'instant' })
+                  // 延迟导航，确保状态更新
+                  setTimeout(() => {
+                    navigate('/login')
+                  }, 10)
+                }}
+              >
+                登录
+              </Button>
+              <Button
+                theme="solid"
+                type="primary"
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  // 清空导航栏选中样式
+                  setActiveKey('')
+                  // 立即重置页面滚动位置，不使用平滑滚动
+                  window.scrollTo({ top: 0, behavior: 'instant' })
+                  // 延迟导航，确保状态更新
+                  setTimeout(() => {
+                    navigate('/register')
+                  }, 10)
+                }}
+              >
+                注册
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

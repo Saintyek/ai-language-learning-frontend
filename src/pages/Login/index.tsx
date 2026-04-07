@@ -23,6 +23,8 @@ const Login: React.FC = () => {
         password: values.password,
       })
       saveAuthData(response.token, response.userInfo)
+      // 触发登录事件，通知其他组件更新状态
+      window.dispatchEvent(new Event('authChange'))
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败，请检查邮箱和密码')
@@ -68,13 +70,15 @@ const Login: React.FC = () => {
 
         <Form
           initValues={{ remember: false }}
-          onSubmit={(values: any) => onSubmit(values as LoginFormValues)}
+          onSubmit={(values: any, e: any) => {
+            e?.preventDefault()
+            onSubmit(values as LoginFormValues)
+          }}
           className="mt-8 space-y-6 animate-fade-in"
         >
           <Form.Input
             field="email"
             noLabel
-            type="email"
             placeholder="请输入邮箱"
             className="rounded-lg"
             rules={[

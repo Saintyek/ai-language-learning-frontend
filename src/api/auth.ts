@@ -82,8 +82,14 @@ export const register = async (params: RegisterParams): Promise<{ token?: string
   }
 }
 
+// 认证数据过期时间：1天（毫秒）
+const AUTH_EXPIRY_TIME = 24 * 60 * 60 * 1000
+
 // 保存 token 和用户信息到 localStorage
 export const saveAuthData = (token: string | undefined, userInfo: UserInfo): void => {
+  // 保存过期时间
+  localStorage.setItem('authExpiry', String(Date.now() + AUTH_EXPIRY_TIME))
+
   if (token) {
     localStorage.setItem('token', token)
   }
@@ -94,8 +100,32 @@ export const saveAuthData = (token: string | undefined, userInfo: UserInfo): voi
   localStorage.setItem('userInfo', JSON.stringify(userInfo))
 }
 
+// 检查认证数据是否过期，如果过期则清除
+export const checkAndClearExpiredAuth = (): boolean => {
+  const expiryStr = localStorage.getItem('authExpiry')
+  if (!expiryStr) {
+    // 没有过期时间，清除所有认证数据
+    clearAuthData()
+    return true
+  }
+
+  const expiry = parseInt(expiryStr, 10)
+  if (Date.now() > expiry) {
+    // 已过期，清除认证数据
+    clearAuthData()
+    return true
+  }
+
+  return false
+}
+
 // 从 localStorage 获取用户信息
 export const getUserInfo = (): UserInfo | null => {
+  // 先检查是否过期
+  if (checkAndClearExpiredAuth()) {
+    return null
+  }
+
   const userInfoStr = localStorage.getItem('userInfo')
   if (userInfoStr) {
     try {
@@ -113,9 +143,15 @@ export const clearAuthData = (): void => {
   localStorage.removeItem('token')
   localStorage.removeItem('userId')
   localStorage.removeItem('userInfo')
+  localStorage.removeItem('authExpiry')
 }
 
 // 检查是否已登录
 export const isAuthenticated = (): boolean => {
+  // 先检查是否过期
+  if (checkAndClearExpiredAuth()) {
+    return false
+  }
+
   return !!localStorage.getItem('token') || !!localStorage.getItem('userId')
 }

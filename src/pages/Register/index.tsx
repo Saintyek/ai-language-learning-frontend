@@ -16,6 +16,8 @@ const Register: React.FC = () => {
     try {
       const response = await register(values)
       saveAuthData(response.token, response.userInfo)
+      // 触发登录事件，通知其他组件更新状态
+      window.dispatchEvent(new Event('authChange'))
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败，请稍后重试')
@@ -60,7 +62,10 @@ const Register: React.FC = () => {
         )}
 
         <Form
-          onSubmit={(values: RegisterParams) => onSubmit(values)}
+          onSubmit={(values: RegisterParams, e: any) => {
+            e?.preventDefault()
+            onSubmit(values)
+          }}
           className="mt-8 space-y-6 animate-fade-in"
         >
           <Form.Input
@@ -77,7 +82,6 @@ const Register: React.FC = () => {
           <Form.Input
             field="email"
             noLabel
-            type="email"
             placeholder="请输入邮箱"
             className="rounded-lg"
             rules={[

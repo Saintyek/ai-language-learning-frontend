@@ -62,9 +62,13 @@ request.interceptors.response.use(
           break
         case 401:
           errorMessage = serverMessage || '未授权，请重新登录'
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          window.location.href = '/login'
+          // 如果是登录或注册接口，不自动跳转
+          const url = error.config?.url || ''
+          if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('userInfo')
+            window.location.href = '/login'
+          }
           break
         case 403:
           errorMessage = serverMessage || '拒绝访问'

@@ -100,9 +100,9 @@ After executing this command, provide next-step guidance to user:
 ### Step 1 - Confirmation
 Guide user to verify the generated plan.md is correct and the technical approach is sound.
 
-**If needs adjustment**: Run `/adk:sdd:clarify [feedback]` to refine the plan.
+**If needs adjustment**: Run `/adk-sdd-clarify [feedback]` to refine the plan.
 
 ### Step 2 - Next Step Recommendation
 Once plan is confirmed and satisfactory:
 
-**Create Task Breakdown**: Execute `/adk:sdd:tasks` to generate the detailed task breakdown based on the implementation plan.
+**Create Task Breakdown**: Execute `/adk-sdd-tasks` to generate the detailed task breakdown based on the implementation plan.

@@ -30,7 +30,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 
 ## Outline
 
-The text the user typed after `/adk:sdd:specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+The text the user typed after `/adk-sdd-specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
 
 Given that feature description, do this:
 
@@ -52,7 +52,7 @@ Given that feature description, do this:
     |-------|------|--------|
     | **8-10** | Sufficient | Proceed directly with specification generation |
     | **5-7** | Workable | Proceed with a note on weak dimensions; AI will make reasonable inferences marked as `[INFERRED]` |
-    | **0-4** | Early-stage | Recommend enriching input or using `/adk:sdd:brainstorm` (if available). **Stop and wait for user confirmation before proceeding.** |
+    | **0-4** | Early-stage | Recommend enriching input or using `/adk-sdd-brainstorm` (if available). **Stop and wait for user confirmation before proceeding.** |
 
     c. **Present assessment to user** (use configured language):
 
@@ -71,8 +71,8 @@ Given that feature description, do this:
 
         ### Recommendation
         - **Sufficient**: "Input is well-formed. Proceeding with specification generation."
-        - **Workable**: "Proceeding. Weak areas will rely on AI inference (marked [INFERRED]). Refine later via `/adk:sdd:clarify`."
-        - **Early-stage**: "Input is brief. Consider enriching it for better results, or proceed — the spec can be refined later via `/adk:sdd:clarify`."
+        - **Workable**: "Proceeding. Weak areas will rely on AI inference (marked [INFERRED]). Refine later via `/adk-sdd-clarify`."
+        - **Early-stage**: "Input is brief. Consider enriching it for better results, or proceed — the spec can be refined later via `/adk-sdd-clarify`."
         ```
 
     d. **Routing**:
@@ -169,7 +169,7 @@ Given that feature description, do this:
 
     ## Notes
 
-    - Items marked incomplete require spec updates before `/adk:sdd:clarify` or `/adk:sdd:plan`
+    - Items marked incomplete require spec updates before `/adk-sdd-clarify` or `/adk-sdd-plan`
     ```
 
     b. **Run Validation Check**: Review the spec against each checklist item:
@@ -224,7 +224,7 @@ Given that feature description, do this:
 
     d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-8. Report completion with feature name, spec file path, checklist results, and readiness for the next phase (`/adk:sdd:clarify` or `/adk:sdd:plan`).
+8. Report completion with feature name, spec file path, checklist results, and readiness for the next phase (`/adk-sdd-clarify` or `/adk-sdd-plan`).
 
 **NOTE:** The script generates a feature name in YYYYMMDD-description format and initializes the spec file before writing.
 
@@ -290,9 +290,9 @@ After executing this command, provide next-step guidance to user:
 ### Step 1 - Confirmation
 Guide user to verify the generated spec.md is correct and captures all requirements.
 
-**If needs adjustment**: Run `/adk:sdd:clarify [feedback]` to refine the specification.
+**If needs adjustment**: Run `/adk-sdd-clarify [feedback]` to refine the specification.
 
 ### Step 2 - Next Step Recommendation
 Once spec is confirmed and satisfactory:
 
-**Create Implementation Plan**: Execute `/adk:sdd:plan` to generate the technical implementation plan based on the specification.
+**Create Implementation Plan**: Execute `/adk-sdd-plan` to generate the technical implementation plan based on the specification.

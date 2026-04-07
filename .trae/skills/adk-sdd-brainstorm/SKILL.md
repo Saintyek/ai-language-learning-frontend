@@ -500,10 +500,10 @@ Guide the user to check whether the generated technical proposal meets expectati
 
 **If adjustments are needed**:
 - Tell me directly what needs to be modified, and I will update the proposal
-- Or re-execute `/adk:sdd:brainstorm` with additional information
+- Or re-execute `/adk-sdd-brainstorm` with additional information
 
 ### Next Steps
 After the proposal is confirmed, you can:
 1. Share the proposal with the team for review
-2. Execute `/adk:sdd:specify` to create a formal feature specification based on the brainstorm output
-3. Execute `/adk:sdd:ff` to quickly draft `spec.md`, `plan.md`, and `tasks.md`
+2. Execute `/adk-sdd-specify` to create a formal feature specification based on the brainstorm output
+3. Execute `/adk-sdd-ff` to quickly draft `spec.md`, `plan.md`, and `tasks.md`

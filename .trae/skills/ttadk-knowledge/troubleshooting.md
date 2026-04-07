@@ -12,21 +12,21 @@
 4. 初始化项目：`ttadk init my-project`
 5. 启动 AI 工具：`ttadk code`
 6. 在 AI 工具中执行 `/init` 生成 `CLAUDE.md` / `AGENTS.md`，并人工审查后再使用
-7. 先执行 `/adk:readiness` 了解仓库 readiness，再根据场景进入 `/adk:sdd:brainstorm`、`/adk:sdd:specify` 或 `/adk:sdd:ff`
+7. 先执行 `/adk-readiness` 了解仓库 readiness，再根据场景进入 `/adk-sdd-brainstorm`、`/adk-sdd-specify` 或 `/adk-sdd-ff`
 
 ### Q：如何用 TTADK 开始一个需求？
 
 > Lynx 同学需参考 [Spark Skill Lynx 开发全流程验证](https://bytedance.larkoffice.com/wiki/U6LYw6OnhipwMNkRab8c943PnVe) 配置 Figma MCP Token
 
-1. 先执行 `/adk:readiness`，确认仓库在上下文、测试、规范、CI 等方面是否足够 AI Friendly
-2. 复杂需求建议先准备 ERD（技术方案）或直接执行 `/adk:sdd:brainstorm`，先拆分模块、确认边界和技术方向。ERD 模板参考：[前端技术方案模板](https://bytedance.larkoffice.com/wiki/IKbfwRA3aiCZGokZXD5cRdQgnZf)、[后端技术方案模板](https://bytedance.larkoffice.com/wiki/ZBuawQfg9isvG2k7gXbcNMOhnSg)、[TTADK Lynx ERD 模版](https://bytedance.larkoffice.com/wiki/BmBBwcpypi3RyQkTVrBcvQalnXI)
+1. 先执行 `/adk-readiness`，确认仓库在上下文、测试、规范、CI 等方面是否足够 AI Friendly
+2. 复杂需求建议先准备 ERD（技术方案）或直接执行 `/adk-sdd-brainstorm`，先拆分模块、确认边界和技术方向。ERD 模板参考：[前端技术方案模板](https://bytedance.larkoffice.com/wiki/IKbfwRA3aiCZGokZXD5cRdQgnZf)、[后端技术方案模板](https://bytedance.larkoffice.com/wiki/ZBuawQfg9isvG2k7gXbcNMOhnSg)、[TTADK Lynx ERD 模版](https://bytedance.larkoffice.com/wiki/BmBBwcpypi3RyQkTVrBcvQalnXI)
 3. Clone 代码到本地（多仓库可新建临时目录统一 clone，更正式的方案参考 [基于 SDD 的代码仓库管理方案](https://bytedance.sg.larkoffice.com/docx/RjbrdkxmroH6uUxqSCEl5epxg1d)）
 4. 在项目目录下执行 `ttadk init`
 5. 执行 `ttadk code` 启动 AI 工具
 6. 如果没有 `CLAUDE.md` / `AGENTS.md`，执行 `/init` 生成并审查
 7. 选择路径：
-   - 标准模式：`/adk:sdd:specify <需求描述或文档链接>` → `/adk:sdd:plan` → `/adk:sdd:tasks` → `/adk:sdd:implement`
-   - 快速模式：`/adk:sdd:ff <需求描述或文档链接>` → `/adk:sdd:implement`
+   - 标准模式：`/adk-sdd-specify <需求描述或文档链接>` → `/adk-sdd-plan` → `/adk-sdd-tasks` → `/adk-sdd-implement`
+   - 快速模式：`/adk-sdd-ff <需求描述或文档链接>` → `/adk-sdd-implement`
 
 ---
 
@@ -34,7 +34,7 @@
 
 ### Q：生成内容不符合预期，如何排查？
 
-1. 先审查 spec / plan / tasks 是否有遗漏。优先执行 `/adk:sdd:clarify` 修正；如果已经有完整三件套，也可以先跑 `/adk:sdd:analyze` 看覆盖和一致性问题
+1. 先审查 spec / plan / tasks 是否有遗漏。优先执行 `/adk-sdd-clarify` 修正；如果已经有完整三件套，也可以先跑 `/adk-sdd-analyze` 看覆盖和一致性问题
 2. 检查 ERD 质量，确认是否有关键信息漏掉
 3. 检查 `CLAUDE.md` / `AGENTS.md`，补充仓库上下文（术语、架构设计等）。没有的话先执行 `/init`
 4. 检查代码库质量，确认分层是否清晰、抽象是否合理
@@ -44,34 +44,34 @@
 ### Q：可以跳过工作流中的某些阶段吗？
 
 必须的依赖关系：
-- 标准模式：`/adk:sdd:specify` → `/adk:sdd:plan` → `/adk:sdd:tasks` → `/adk:sdd:implement`
-- 快速模式：`/adk:sdd:ff` → `/adk:sdd:implement`
+- 标准模式：`/adk-sdd-specify` → `/adk-sdd-plan` → `/adk-sdd-tasks` → `/adk-sdd-implement`
+- 快速模式：`/adk-sdd-ff` → `/adk-sdd-implement`
 
-可跳过或按需使用的阶段：`/adk:sdd:brainstorm`、`/adk:sdd:clarify`、`/adk:sdd:erd`、`/adk:sdd:analyze`
+可跳过或按需使用的阶段：`/adk-sdd-brainstorm`、`/adk-sdd-clarify`、`/adk-sdd-erd`、`/adk-sdd-analyze`
 
-### Q：`/adk:sdd:clarify` 可以执行多次吗？
+### Q：`/adk-sdd-clarify` 可以执行多次吗？
 
 可以。每次提出最多 5 个新问题并更新所有已存在的制品，可按需多次执行。
 
 ### Q：手动修改了 spec.md 会怎样？
 
-手动修改没问题，但下游制品不会自动更新。需执行 `/adk:sdd:clarify` 或重新运行下游命令来同步。
+手动修改没问题，但下游制品不会自动更新。需执行 `/adk-sdd-clarify` 或重新运行下游命令来同步。
 
 ### Q：可以结合 Vibe Coding 进行小改动吗？
 
-可以。SDD 更适合结构化功能开发，小修小补可直接编辑或 Vibe Coding。若已进入 SDD 流程，可用 `/adk:sdd:implement [反馈]` 修正实现问题；如果根因是规格不清晰，先执行 `/adk:sdd:clarify`。
+可以。SDD 更适合结构化功能开发，小修小补可直接编辑或 Vibe Coding。若已进入 SDD 流程，可用 `/adk-sdd-implement [反馈]` 修正实现问题；如果根因是规格不清晰，先执行 `/adk-sdd-clarify`。
 
 ### Q：如何推倒重来？
 
-删除或重命名 `specs/` 下的功能目录，然后重新执行 `/adk:sdd:specify` 或 `/adk:sdd:ff`。
+删除或重命名 `specs/` 下的功能目录，然后重新执行 `/adk-sdd-specify` 或 `/adk-sdd-ff`。
 
-### Q：`/adk:sdd:analyze` 是做什么的？
+### Q：`/adk-sdd-analyze` 是做什么的？
 
 它是只读制品分析命令，主要检查 `spec.md`、`plan.md`、`tasks.md` 三者的一致性、覆盖度和质量，不负责改代码，也不是代码审查命令。
 
-### Q：什么时候用 `/adk:sdd:ff`，什么时候走标准模式？
+### Q：什么时候用 `/adk-sdd-ff`，什么时候走标准模式？
 
-适合用 `/adk:sdd:ff` 的情况：
+适合用 `/adk-sdd-ff` 的情况：
 - 需求已经比较清楚
 - 想快速拿到 `spec.md`、`plan.md`、`tasks.md`
 - 团队已经对方案基本达成一致
@@ -87,9 +87,9 @@
 
 ### Q：怎么知道当前仓库适不适合直接开始 AI 开发？
 
-执行 `/adk:readiness`。它会从上下文工程、文档、测试、代码组织、安全治理、版本协作、SDD readiness 等多个维度给出成熟度报告和改进建议。
+执行 `/adk-readiness`。它会从上下文工程、文档、测试、代码组织、安全治理、版本协作、SDD readiness 等多个维度给出成熟度报告和改进建议。
 
-### Q：什么时候该先跑 `/adk:readiness`？
+### Q：什么时候该先跑 `/adk-readiness`？
 
 推荐在以下情况先跑：
 1. 新接手仓库
@@ -113,9 +113,9 @@
 - 需要把一轮 SDD / 实现放到云端异步跑
 - 想先离线等待结果，再把分支同步回来审查
 
-### Q：`/adk:readiness` 和 `ttadk handoff` 对应什么 skill？
+### Q：`/adk-readiness` 和 `ttadk handoff` 对应什么 skill？
 
-- `/adk:readiness` 对应 `adk-readiness`
+- `/adk-readiness` 对应 `adk-readiness`
 - `ttadk handoff *` 通过 `/adk/handoff.md` 命令入口管理，无独立 skill
 
 ---
@@ -129,13 +129,13 @@
 | `.ttadk/` | 是 | 团队共享配置 |
 | `.ttadk/memory/constitution.md` | 是 | 团队共同维护的项目原则 |
 | `CLAUDE.md` / `AGENTS.md` | 是 | AI 工具规范，由 `/init` 生成 |
-| `specs/` | 建议 | 定期用 `/adk:sdd:archive` 归档 |
+| `specs/` | 建议 | 定期用 `/adk-sdd-archive` 归档 |
 | `specs/doc_export/` | 否 | 加入 `.gitignore`（中间产物） |
 | `.claude/` / `.cursor/` 等 | 建议 | 插件安装的配置，可在团队间共享 |
 
 ### Q：Constitution 是什么？
 
-`.ttadk/memory/constitution.md` 定义项目级原则（编码标准、架构决策、质量门禁）。所有 SDD 命令执行前都会读取。通过 `/adk:sdd:constitution` 编辑。每个项目一份，在仓库根目录。
+`.ttadk/memory/constitution.md` 定义项目级原则（编码标准、架构决策、质量门禁）。所有 SDD 命令执行前都会读取。通过 `/adk-sdd-constitution` 编辑。每个项目一份，在仓库根目录。
 
 ### Q：可以同时开发多个功能吗？
 
@@ -152,7 +152,7 @@
 ### Q：如何确保 AI 代码贡献被统计？
 
 两种方式：
-1. **使用 `/adk:commit`**（推荐），自动添加追踪签名
+1. **使用 `/adk-commit`**（推荐），自动添加追踪签名
 2. **通过 `ttadk code` 启动**并选择模型，走 TTADK 模型网关
 
 统计时机为 commit 代码被 MR 合入，而不仅仅是 commit。更新频率约 T+2。

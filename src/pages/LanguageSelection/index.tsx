@@ -1,8 +1,14 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import 'flag-icons/css/flag-icons.min.css'
 import { languageOptions } from '@/consts/languages'
 
 const LanguageSelection: React.FC = () => {
+  const navigate = useNavigate()
+
+  const handleLanguageClick = (langCode: string) => {
+    navigate(`/languages/${langCode}/chat`)
+  }
   return (
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(191,219,254,0.95),_rgba(239,246,255,0.72)_32%,_#f8fbff_62%,_#eef4ff_100%)] pt-36 pb-24 px-4">
       <div className="pointer-events-none absolute inset-0">
@@ -44,6 +50,7 @@ const LanguageSelection: React.FC = () => {
             <button
               key={language.label}
               type="button"
+              onClick={() => handleLanguageClick(language.code)}
               className="group relative overflow-hidden rounded-[28px] border border-white/70 bg-white/72 px-6 py-7 text-center shadow-[0_18px_45px_rgba(15,23,42,0.10)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-sky-200/90 hover:bg-white/88 hover:shadow-[0_24px_60px_rgba(14,165,233,0.18)] focus:outline-none focus:ring-4 focus:ring-sky-200/80"
             >
               <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

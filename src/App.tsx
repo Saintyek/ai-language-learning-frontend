@@ -1,17 +1,26 @@
 import React from 'react'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, matchPath, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import AppRoutes from './routes/Routes'
 import Footer from './components/Footer'
 
+const AppLayout = () => {
+  const location = useLocation()
+  const hideFooter = Boolean(matchPath('/languages/:langCode/chat', location.pathname))
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <AppRoutes />
+      {!hideFooter && <Footer />}
+    </div>
+  )
+}
+
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <AppRoutes />
-        <Footer />
-      </div>
+      <AppLayout />
     </Router>
   )
 }

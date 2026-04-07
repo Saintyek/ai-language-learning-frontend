@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Button, Dropdown } from '@douyinfe/semi-ui'
 import { IconChevronDown } from '@douyinfe/semi-icons'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { getUserInfo, isAuthenticated, clearAuthData } from '@/api/auth'
+import { languageOptions } from '@/consts/languages'
+import 'flag-icons/css/flag-icons.min.css'
 
 const Navbar: React.FC = () => {
   const location = useLocation()
@@ -45,6 +47,17 @@ const Navbar: React.FC = () => {
   )
 
   const [activeKey, setActiveKey] = useState('')
+
+  const chatRouteMatch = matchPath('/languages/:langCode/chat', location.pathname)
+  const currentLanguage = languageOptions.find(lang => lang.code === chatRouteMatch?.params.langCode)
+  const languageDropdownItems = languageOptions
+    .filter(lang => lang.code !== currentLanguage?.code)
+    .map(lang => ({
+      node: 'item' as const,
+      name: lang.label,
+      onClick: () => navigate(`/languages/${lang.code}/chat`),
+      icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
+    }))
 
   // 退出登录
   const handleLogout = () => {
@@ -146,28 +159,53 @@ const Navbar: React.FC = () => {
         </nav>
 
         {/* 登录/注册按钮 */}
-        <div className="hidden md:flex space-x-4">
+        <div className="hidden md:flex items-center space-x-3">
           {isLoggedIn ? (
-            <Dropdown
-              trigger="click"
-              position="bottomRight"
-              render={
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={handleLogout}>退出登录</Dropdown.Item>
-                </Dropdown.Menu>
-              }
-            >
-              <span>
-                <Button
-                  icon={<IconChevronDown />}
-                  iconPosition="right"
-                  theme="borderless"
-                  style={{ fontSize: '14px' }}
+            <>
+              {currentLanguage ? (
+                <Dropdown
+                  trigger="click"
+                  position="bottomRight"
+                  menu={languageDropdownItems}
                 >
-                  你好, {username}
-                </Button>
-              </span>
-            </Dropdown>
+                  <span>
+                    <Button
+                      icon={<IconChevronDown />}
+                      iconPosition="right"
+                      theme="borderless"
+                      style={{ fontSize: '14px' }}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`fi fi-${currentLanguage.code} rounded-sm text-xl`}
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </Button>
+                  </span>
+                </Dropdown>
+              ) : null}
+              <Dropdown
+                trigger="click"
+                position="bottomRight"
+                render={
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={handleLogout}>退出登录</Dropdown.Item>
+                  </Dropdown.Menu>
+                }
+              >
+                <span>
+                  <Button
+                    icon={<IconChevronDown />}
+                    iconPosition="right"
+                    theme="borderless"
+                    style={{ fontSize: '14px' }}
+                  >
+                    你好, {username}
+                  </Button>
+                </span>
+              </Dropdown>
+            </>
           ) : (
             <>
               <Button

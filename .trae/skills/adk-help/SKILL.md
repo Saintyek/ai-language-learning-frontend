@@ -32,7 +32,7 @@ Before gathering any context, classify the user's question into one or more of t
 
 | Category | Examples | Requires SDD State? |
 |----------|---------|---------------------|
-| **Knowledge Query** | "什么是 SDD？", "`/adk:sdd:plan` 怎么用？", "ttadk init 有哪些参数？" | No |
+| **Knowledge Query** | "什么是 SDD？", "`/adk-sdd-plan` 怎么用？", "ttadk init 有哪些参数？" | No |
 | **State Analysis** | "我当前进度如何？", "下一步该做什么？", "帮我分析当前状态" | Yes |
 | **Troubleshooting** | "报错了怎么办？", "为什么 check-prerequisites 失败？" | Maybe (depends on context) |
 | **Project Guidance** | "这个功能应该怎么拆分？", "我的 spec 写得好不好？" | Yes |
@@ -51,7 +51,7 @@ Do NOT read all sub-files blindly — only load what is needed based on the user
 
 ### 3. Detect Current SDD State (Only When Needed)
 
-**Skip this step** if the user is only asking knowledge-based questions (e.g., "什么是 SDD？", "`/adk:sdd:plan` 命令怎么用？").
+**Skip this step** if the user is only asking knowledge-based questions (e.g., "什么是 SDD？", "`/adk-sdd-plan` 命令怎么用？").
 
 **Execute this step** when the user's question involves their current project state, progress, or next steps.
 
@@ -64,13 +64,13 @@ Then check which SDD artifacts exist by attempting to read each file:
 
 | Artifact | Path | Produced By |
 |----------|------|-------------|
-| spec.md | `FEATURE_DIR/spec.md` | `/adk:sdd:specify` or `/adk:sdd:ff` |
-| plan.md | `FEATURE_DIR/plan.md` | `/adk:sdd:plan` or `/adk:sdd:ff` |
-| research.md | `FEATURE_DIR/research.md` | `/adk:sdd:plan` |
-| data-model.md | `FEATURE_DIR/data-model.md` | `/adk:sdd:plan` |
-| contracts/ | `FEATURE_DIR/contracts/` | `/adk:sdd:plan` |
-| technical-design.md | `FEATURE_DIR/technical-design.md` | `/adk:sdd:erd` |
-| tasks.md | `FEATURE_DIR/tasks.md` | `/adk:sdd:tasks` or `/adk:sdd:ff` |
+| spec.md | `FEATURE_DIR/spec.md` | `/adk-sdd-specify` or `/adk-sdd-ff` |
+| plan.md | `FEATURE_DIR/plan.md` | `/adk-sdd-plan` or `/adk-sdd-ff` |
+| research.md | `FEATURE_DIR/research.md` | `/adk-sdd-plan` |
+| data-model.md | `FEATURE_DIR/data-model.md` | `/adk-sdd-plan` |
+| contracts/ | `FEATURE_DIR/contracts/` | `/adk-sdd-plan` |
+| technical-design.md | `FEATURE_DIR/technical-design.md` | `/adk-sdd-erd` |
+| tasks.md | `FEATURE_DIR/tasks.md` | `/adk-sdd-tasks` or `/adk-sdd-ff` |
 | checklists/ | `FEATURE_DIR/checklists/` | Supporting validation artifacts created by workflow commands when needed |
 
 Build a **state summary**:
@@ -129,7 +129,7 @@ Display a compact status overview:
 
 - If the user asked a specific question, answer it using the knowledge base and project context.
 - Be concise and actionable. Prefer bullet points over long paragraphs.
-- Reference specific commands with `/adk:command-name` format.
+- Reference specific commands with `/adk-command-name` format.
 - **Include documentation links**: If your answer references information from the knowledge base that has associated documentation links (e.g., Lark doc links, external references), include those links in your answer and suggest the user read them for more details.
 - If the knowledge base lacks information, acknowledge it and suggest using `tiksearch` MCP for internal docs or `lark-docs` MCP for Lark documents.
 
@@ -139,13 +139,13 @@ Based on the detected SDD state and user's question, recommend the most logical 
 
 | Current Stage | Recommended Next Step |
 |---------------|----------------------|
-| not-started | Run `/adk:readiness` to assess the repo, then `/adk:sdd:specify` for standard flow or `/adk:sdd:ff` for fast-forward flow |
-| specified | Run `/adk:sdd:plan` to create implementation plan, or `/adk:sdd:clarify` to refine spec |
-| planned | Run `/adk:sdd:erd` for technical design if needed, or `/adk:sdd:tasks` for task breakdown |
-| designed | Run `/adk:sdd:tasks` for task breakdown |
-| tasked | Run `/adk:sdd:analyze` for read-only artifact quality check, or `/adk:sdd:implement` to start coding |
-| implementing | Continue with `/adk:sdd:implement`, or `/adk:commit` when ready |
-| committed | Run `/adk:sdd:archive` to archive the feature |
+| not-started | Run `/adk-readiness` to assess the repo, then `/adk-sdd-specify` for standard flow or `/adk-sdd-ff` for fast-forward flow |
+| specified | Run `/adk-sdd-plan` to create implementation plan, or `/adk-sdd-clarify` to refine spec |
+| planned | Run `/adk-sdd-erd` for technical design if needed, or `/adk-sdd-tasks` for task breakdown |
+| designed | Run `/adk-sdd-tasks` for task breakdown |
+| tasked | Run `/adk-sdd-analyze` for read-only artifact quality check, or `/adk-sdd-implement` to start coding |
+| implementing | Continue with `/adk-sdd-implement`, or `/adk-commit` when ready |
+| committed | Run `/adk-sdd-archive` to archive the feature |
 
 If the user's question implies a specific need, tailor the recommendation accordingly.
 

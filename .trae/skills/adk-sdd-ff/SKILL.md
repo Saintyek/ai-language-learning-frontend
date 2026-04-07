@@ -123,9 +123,9 @@ After executing this command, provide next-step guidance to user:
 ### Step 1 - Confirmation
 Guide user to verify the generated documents (spec.md, plan.md, tasks.md..) are correct.
 
-**If needs adjustment**: Run `/adk:sdd:clarify [feedback]` to refine the documents.
+**If needs adjustment**: Run `/adk-sdd-clarify [feedback]` to refine the documents.
 
 ### Step 2 - Next Step Recommendation
 Once documents are confirmed and satisfactory:
 
-**Start Implementation**: Execute `/adk:sdd:implement` to begin implementing the tasks sequentially.
+**Start Implementation**: Execute `/adk-sdd-implement` to begin implementing the tasks sequentially.

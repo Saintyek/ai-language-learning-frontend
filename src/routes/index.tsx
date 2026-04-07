@@ -3,6 +3,7 @@ import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import LanguageSelection from '@/pages/LanguageSelection'
+import Chat from '@/pages/Chat'
 
 const routes: RouteObject[] = [
   {
@@ -20,6 +21,10 @@ const routes: RouteObject[] = [
   {
     path: '/languages',
     element: <LanguageSelection />,
+  },
+  {
+    path: '/languages/:langCode/chat',
+    element: <Chat />,
   },
 ]
 

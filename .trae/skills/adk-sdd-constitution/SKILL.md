@@ -115,11 +115,11 @@ After executing this command, provide next-step guidance to user:
 ### Step 1 - Confirmation
 Guide user to verify the generated constitution is correct and aligns with project principles.
 
-**If needs adjustment**: Re-run `/adk:sdd:constitution [feedback]` to refine.
+**If needs adjustment**: Re-run `/adk-sdd-constitution [feedback]` to refine.
 
 ### Step 2 - Next Step Recommendation
 Once constitution is confirmed and satisfactory:
 
 **Create Feature Specification**:
-- **Standard workflow**: Execute `/adk:sdd:specify [input]` to create detailed feature specification with validation and clarification flow
-- **Fast-forward workflow**: Execute `/adk:sdd:ff [input]` to quickly draft spec, plan, and tasks together
+- **Standard workflow**: Execute `/adk-sdd-specify [input]` to create detailed feature specification with validation and clarification flow
+- **Fast-forward workflow**: Execute `/adk-sdd-ff [input]` to quickly draft spec, plan, and tasks together

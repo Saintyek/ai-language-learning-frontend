@@ -33,26 +33,26 @@ TTADK 当前主要分为两类命令：**基础公共命令**、**SDD 工作流�
 
 | 命令 | 说明 |
 |------|------|
-| `/adk:help` | TTADK 帮助手册，可用来回答 TTADK 介绍、命令用法、报错咨询、SDD 下一步指引等问题 |
-| `/adk:readiness` | 多维度检查当前代码仓库是否足够 AI Friendly，并给出成熟度报告和改进建议 |
-| `/adk:commit` | 提交当前工作区改动，自动生成规范化 commit message 并附加 TTADK 追踪签名 |
+| `/adk-help` | TTADK 帮助手册，可用来回答 TTADK 介绍、命令用法、报错咨询、SDD 下一步指引等问题 |
+| `/adk-readiness` | 多维度检查当前代码仓库是否足够 AI Friendly，并给出成熟度报告和改进建议 |
+| `/adk-commit` | 提交当前工作区改动，自动生成规范化 commit message 并附加 TTADK 追踪签名 |
 | `ttadk handoff` | 异步 handoff CLI，用于提交、查看、继续、停止、同步异步任务 |
 
 ### SDD 工作流命令
 
 | 命令 | 产出物 | 说明 |
 |------|--------|------|
-| `/adk:sdd:brainstorm` | 思路文档 / Lark 文档 | 头脑风暴入口，支持 ERD、学习资料、简单想法等输入，帮助梳理技术方案 |
-| `/adk:sdd:ff` | `spec.md`、`plan.md`、`tasks.md` | Fast Forward 模式，一步生成核心制品，适合快速推进 |
-| `/adk:sdd:constitution` | `.ttadk/memory/constitution.md` | 定义项目原则、编码标准、质量门禁 |
-| `/adk:sdd:specify` | `spec.md` | 生成功能规格、用户故事、成功标准 |
-| `/adk:sdd:clarify` | 更新已有制品 | 交互式澄清需求并同步已有下游制品 |
-| `/adk:sdd:plan` | `plan.md`、`research.md`、`data-model.md`、`contracts/`、`quickstart.md` | 制定实现计划与技术设计骨架 |
-| `/adk:sdd:erd` | `technical-design.md` | 生成技术设计文档，包含图表和关键设计说明 |
-| `/adk:sdd:tasks` | `tasks.md` | 生成依赖有序的原子化任务列表 |
-| `/adk:sdd:analyze` | 分析报告 | 对 `spec.md`、`plan.md`、`tasks.md` 做只读一致性和质量检查 |
-| `/adk:sdd:implement` | 代码变更 | 按任务顺序落地实现代码 |
-| `/adk:sdd:archive` | 归档索引 / tar.gz | 归档历史功能制品 |
+| `/adk-sdd-brainstorm` | 思路文档 / Lark 文档 | 头脑风暴入口，支持 ERD、学习资料、简单想法等输入，帮助梳理技术方案 |
+| `/adk-sdd-ff` | `spec.md`、`plan.md`、`tasks.md` | Fast Forward 模式，一步生成核心制品，适合快速推进 |
+| `/adk-sdd-constitution` | `.ttadk/memory/constitution.md` | 定义项目原则、编码标准、质量门禁 |
+| `/adk-sdd-specify` | `spec.md` | 生成功能规格、用户故事、成功标准 |
+| `/adk-sdd-clarify` | 更新已有制品 | 交互式澄清需求并同步已有下游制品 |
+| `/adk-sdd-plan` | `plan.md`、`research.md`、`data-model.md`、`contracts/`、`quickstart.md` | 制定实现计划与技术设计骨架 |
+| `/adk-sdd-erd` | `technical-design.md` | 生成技术设计文档，包含图表和关键设计说明 |
+| `/adk-sdd-tasks` | `tasks.md` | 生成依赖有序的原子化任务列表 |
+| `/adk-sdd-analyze` | 分析报告 | 对 `spec.md`、`plan.md`、`tasks.md` 做只读一致性和质量检查 |
+| `/adk-sdd-implement` | 代码变更 | 按任务顺序落地实现代码 |
+| `/adk-sdd-archive` | 归档索引 / tar.gz | 归档历史功能制品 |
 
 ## 当前 Skill 索引
 
@@ -60,25 +60,25 @@ TTADK 当前主要分为两类命令：**基础公共命令**、**SDD 工作流�
 
 | Skill | 对应命令/用途 | 说明 |
 |------|---------------|------|
-| `adk-readiness` | `/adk:readiness` | 评估仓库 AI Coding readiness / TTADK readiness |
-| `adk-help` | `/adk:help` | 回答 TTADK、SDD 工作流与下一步建议 |
+| `adk-readiness` | `/adk-readiness` | 评估仓库 AI Coding readiness / TTADK readiness |
+| `adk-help` | `/adk-help` | 回答 TTADK、SDD 工作流与下一步建议 |
 
 ### SDD Skill
 
 | Skill | 对应命令 | 说明 |
 |------|---------|------|
-| `adk-sdd-brainstorm` | `/adk:sdd:brainstorm` | 头脑风暴与方案梳理 |
-| `adk-sdd-ff` | `/adk:sdd:ff` | 一步生成 `spec.md`、`plan.md`、`tasks.md` |
-| `adk-sdd-constitution` | `/adk:sdd:constitution` | 维护项目原则与治理规则 |
-| `adk-sdd-specify` | `/adk:sdd:specify` | 生成功能规格 |
-| `adk-sdd-clarify` | `/adk:sdd:clarify` | 澄清并同步设计产物 |
-| `adk-sdd-plan` | `/adk:sdd:plan` | 生成实现计划与设计骨架 |
-| `adk-sdd-erd` | `/adk:sdd:erd` | 生成技术设计文档 |
-| `adk-sdd-tasks` | `/adk:sdd:tasks` | 生成可执行任务清单 |
-| `adk-sdd-analyze` | `/adk:sdd:analyze` | 只读分析核心制品质量 |
-| `adk-sdd-implement` | `/adk:sdd:implement` | 执行开发任务并落地代码 |
-| `adk-commit` | `/adk:commit` | 按 TTADK 规则提交当前改动 |
-| `adk-sdd-archive` | `/adk:sdd:archive` | 归档历史制品 |
+| `adk-sdd-brainstorm` | `/adk-sdd-brainstorm` | 头脑风暴与方案梳理 |
+| `adk-sdd-ff` | `/adk-sdd-ff` | 一步生成 `spec.md`、`plan.md`、`tasks.md` |
+| `adk-sdd-constitution` | `/adk-sdd-constitution` | 维护项目原则与治理规则 |
+| `adk-sdd-specify` | `/adk-sdd-specify` | 生成功能规格 |
+| `adk-sdd-clarify` | `/adk-sdd-clarify` | 澄清并同步设计产物 |
+| `adk-sdd-plan` | `/adk-sdd-plan` | 生成实现计划与设计骨架 |
+| `adk-sdd-erd` | `/adk-sdd-erd` | 生成技术设计文档 |
+| `adk-sdd-tasks` | `/adk-sdd-tasks` | 生成可执行任务清单 |
+| `adk-sdd-analyze` | `/adk-sdd-analyze` | 只读分析核心制品质量 |
+| `adk-sdd-implement` | `/adk-sdd-implement` | 执行开发任务并落地代码 |
+| `adk-commit` | `/adk-commit` | 按 TTADK 规则提交当前改动 |
+| `adk-sdd-archive` | `/adk-sdd-archive` | 归档历史制品 |
 
 ## 推荐工作流
 
@@ -110,21 +110,21 @@ FF → Implement
 
 | 场景 | 推荐命令 |
 |------|---------|
-| 不知道 TTADK 是什么或下一步该做什么 | `/adk:help` |
-| 想先判断仓库是否适合 AI 开发 | `/adk:readiness` |
+| 不知道 TTADK 是什么或下一步该做什么 | `/adk-help` |
+| 想先判断仓库是否适合 AI 开发 | `/adk-readiness` |
 | 想自然语言管理 handoff 异步任务 | `ttadk handoff` |
-| 只有模糊想法、ERD 或学习资料 | `/adk:sdd:brainstorm` |
-| 开始新功能（完整流程） | `/adk:sdd:specify` |
-| 开始新功能（快速流程） | `/adk:sdd:ff` |
-| 规格或设计制品不清晰 | `/adk:sdd:clarify` |
-| 准备制定实现计划 | `/adk:sdd:plan` |
-| 需要技术设计文档 | `/adk:sdd:erd` |
-| 准备拆解开发任务 | `/adk:sdd:tasks` |
-| 想检查 spec/plan/tasks 质量 | `/adk:sdd:analyze` |
-| 准备写代码 | `/adk:sdd:implement` |
-| 代码准备提交 | `/adk:commit` |
-| 功能完成，归档 | `/adk:sdd:archive` |
-| 设置项目原则 | `/adk:sdd:constitution` |
+| 只有模糊想法、ERD 或学习资料 | `/adk-sdd-brainstorm` |
+| 开始新功能（完整流程） | `/adk-sdd-specify` |
+| 开始新功能（快速流程） | `/adk-sdd-ff` |
+| 规格或设计制品不清晰 | `/adk-sdd-clarify` |
+| 准备制定实现计划 | `/adk-sdd-plan` |
+| 需要技术设计文档 | `/adk-sdd-erd` |
+| 准备拆解开发任务 | `/adk-sdd-tasks` |
+| 想检查 spec/plan/tasks 质量 | `/adk-sdd-analyze` |
+| 准备写代码 | `/adk-sdd-implement` |
+| 代码准备提交 | `/adk-commit` |
+| 功能完成，归档 | `/adk-sdd-archive` |
+| 设置项目原则 | `/adk-sdd-constitution` |
 
 ## TTADK CLI 速查
 

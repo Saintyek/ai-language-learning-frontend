@@ -131,7 +131,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - Re-run the build/test until successful
    - Report final status with summary of completed work and build/test results
 
-Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/adk:sdd:tasks` first to regenerate the task list.
+Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/adk-sdd-tasks` first to regenerate the task list.
 
 ## Next Step Guidance
 
@@ -141,10 +141,10 @@ After executing this command, provide next-step guidance to user:
 Guide user to verify the generated code is correct and meets expectations.
 
 **If needs adjustment**:
-- Run `/adk:sdd:clarify [feedback]` to update documentation
-- Run `/adk:sdd:implement [feedback]` to modify the code
+- Run `/adk-sdd-clarify [feedback]` to update documentation
+- Run `/adk-sdd-implement [feedback]` to modify the code
 
 ### Step 2 - Next Step Recommendation
 Once implementation is confirmed and satisfactory:
 
-**Commit Changes**: Execute `/adk:commit` to stage changes, generate commit message, and push to remote.
+**Commit Changes**: Execute `/adk-commit` to stage changes, generate commit message, and push to remote.

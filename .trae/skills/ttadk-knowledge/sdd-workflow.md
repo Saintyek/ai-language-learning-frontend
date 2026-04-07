@@ -22,7 +22,7 @@ Vibe Coding（直接让 AI 写代码，不做结构化规范）会导致以下�
 
 在当前 TTADK 中，最常见的是三条路径：
 
-1. **Readiness 预检查**：先用 `/adk:readiness` 评估仓库是否适合 AI 开发。
+1. **Readiness 预检查**：先用 `/adk-readiness` 评估仓库是否适合 AI 开发。
 2. **标准 SDD 开发流程**：从需求到实现的主路径。
 3. **快速 SDD 流程**：一步生成核心制品后快速进入实现。
 
@@ -52,7 +52,7 @@ FF → Implement
 
 ## SDD 各阶段详解
 
-### 阶段 0：仓库 readiness（`/adk:readiness`）
+### 阶段 0：仓库 readiness（`/adk-readiness`）
 
 **目的**：在正式开始 SDD 前，先确认当前代码仓库是否足够 AI Friendly。
 
@@ -63,7 +63,7 @@ FF → Implement
 - 想在大规模引入 AI 开发前补齐上下文、文档、测试、规范。
 - 想量化仓库 readiness 改造效果。
 
-### 阶段 1：头脑风暴（`/adk:sdd:brainstorm`，可选）
+### 阶段 1：头脑风暴（`/adk-sdd-brainstorm`，可选）
 
 **目的**：把模糊想法、ERD、飞书资料、学习材料整理成结构化思路文档。
 
@@ -76,7 +76,7 @@ FF → Implement
 - 需要先比较方案。
 - 需求较大，想先拆模块再进入正式 spec。
 
-### 阶段 2：项目原则（`/adk:sdd:constitution`）
+### 阶段 2：项目原则（`/adk-sdd-constitution`）
 
 **目的**：定义项目级原则，后续 SDD 命令都会读取并遵守。
 
@@ -84,7 +84,7 @@ FF → Implement
 
 **典型内容**：编码规范、质量门禁、架构原则、命名约定、测试要求。
 
-### 阶段 3：需求规格（`/adk:sdd:specify`）
+### 阶段 3：需求规格（`/adk-sdd-specify`）
 
 **目的**：把功能想法转化成结构化规格文档。
 
@@ -97,7 +97,7 @@ FF → Implement
 - 会根据输入成熟度评估是否应继续或先补充信息。
 - 会尽量保证 `spec.md` 覆盖原始输入中的关键信息。
 
-### 阶段 4：需求澄清（`/adk:sdd:clarify`）
+### 阶段 4：需求澄清（`/adk-sdd-clarify`）
 
 **目的**：通过交互式问答补齐规格中的模糊点，并同步下游制品。
 
@@ -113,7 +113,7 @@ FF → Implement
 - 建议在 `specify` 或 `ff` 后尽早执行。
 - 如果根因是规格不清晰，优先 clarify，再继续 plan / implement。
 
-### 阶段 5：实现计划（`/adk:sdd:plan`）
+### 阶段 5：实现计划（`/adk-sdd-plan`）
 
 **目的**：把需求规格转成技术计划和设计骨架。
 
@@ -130,7 +130,7 @@ FF → Implement
 - 会结合代码库上下文做调研与设计。
 - 强调技术决策、数据模型、接口契约和实施顺序。
 
-### 阶段 6：技术设计（`/adk:sdd:erd`，可选）
+### 阶段 6：技术设计（`/adk-sdd-erd`，可选）
 
 **目的**：生成更适合评审和沟通的技术设计文档。
 
@@ -143,7 +143,7 @@ FF → Implement
 - 需要结构图、时序图、ER 图。
 - 需要团队评审或同步。
 
-### 阶段 7：任务拆解（`/adk:sdd:tasks`）
+### 阶段 7：任务拆解（`/adk-sdd-tasks`）
 
 **目的**：把实现计划拆成依赖有序、可执行的原子任务。
 
@@ -157,7 +157,7 @@ FF → Implement
 - 引用待改文件路径。
 - 支持并行标记 `[P]`。
 
-### 阶段 8：制品分析（`/adk:sdd:analyze`，可选）
+### 阶段 8：制品分析（`/adk-sdd-analyze`，可选）
 
 **目的**：在实现前，对 `spec.md`、`plan.md`、`tasks.md` 做只读质量检查。
 
@@ -169,7 +169,7 @@ FF → Implement
 
 **注意**：这是制品分析，不是代码实现或代码审查命令。
 
-### 阶段 9：代码实现（`/adk:sdd:implement`）
+### 阶段 9：代码实现（`/adk-sdd-implement`）
 
 **目的**：按 `tasks.md` 逐项落地代码。
 
@@ -179,7 +179,7 @@ FF → Implement
 - 会按依赖顺序推进任务。
 - 支持指定 Phase / 任务 ID / 修正反馈。
 - 适合先由流程产出任务，再让 AI 执行。
-### 阶段 10：代码提交（`/adk:commit`）
+### 阶段 10：代码提交（`/adk-commit`）
 
 **目的**：提交当前改动并附带 TTADK 追踪签名。
 
@@ -187,7 +187,7 @@ FF → Implement
 - 自动生成规范化提交信息。
 - 推荐使用，以确保 AI 贡献率统计准确。
 
-### 阶段 11：归档（`/adk:sdd:archive`）
+### 阶段 11：归档（`/adk-sdd-archive`）
 
 **目的**：归档旧 feature 制品，保持 `specs/` 目录整洁。
 
@@ -195,9 +195,9 @@ FF → Implement
 - 适合功能完成后做收尾。
 - 支持 dry-run / json 等模式。
 
-## 快速模式（`/adk:sdd:ff`）
+## 快速模式（`/adk-sdd-ff`）
 
-`/adk:sdd:ff` 将 `specify + plan + tasks` 融合为一步，适合：
+`/adk-sdd-ff` 将 `specify + plan + tasks` 融合为一步，适合：
 
 - 需求清晰、边界稳定的功能。
 - 已经过 `sdd:brainstorm` 并达成共识。
@@ -219,7 +219,7 @@ sdd:ff → [sdd:clarify] → sdd:implement
 
 ## Readiness 检查
 
-`/adk:readiness` 用于在进入 SDD 之前评估仓库是否足够 AI Friendly。
+`/adk-readiness` 用于在进入 SDD 之前评估仓库是否足够 AI Friendly。
 
 对应 skill：`adk-readiness`
 
@@ -243,7 +243,7 @@ implementing ──commit──► committed
 committed ──sdd:archive──► archived
 ```
 
-任何阶段都可以使用 `/adk:sdd:clarify` 来完善规格并同步已有下游制品。
+任何阶段都可以使用 `/adk-sdd-clarify` 来完善规格并同步已有下游制品。
 
 ## Feature 目录结构
 
@@ -270,18 +270,18 @@ specs/20250601-my-feature/
 - **不要依赖对话记忆**：所有状态都持久化在 `specs/` 下的 spec 文件中。
 
 ### 质量提升
-- 先执行 `/adk:readiness`：在改仓库之前先看 readiness 短板。
+- 先执行 `/adk-readiness`：在改仓库之前先看 readiness 短板。
 - 先执行 `/init` 生成 `CLAUDE.md`/`AGENTS.md`（如果不存在）：审查并自定义。
-- 复杂功能先执行 `/adk:sdd:brainstorm` 或准备 ERD：先拆模块和风险点。
-- 在 `specify` 或 `ff` 之后使用 `/adk:sdd:clarify`：在传播到下游制品之前捕获模糊点。
-- 在 `implement` 之前使用 `/adk:sdd:analyze`：写代码前验证核心制品质量。
+- 复杂功能先执行 `/adk-sdd-brainstorm` 或准备 ERD：先拆模块和风险点。
+- 在 `specify` 或 `ff` 之后使用 `/adk-sdd-clarify`：在传播到下游制品之前捕获模糊点。
+- 在 `implement` 之前使用 `/adk-sdd-analyze`：写代码前验证核心制品质量。
 - 如果生成内容质量差，检查：（1）ERD/spec 是否足够详细；（2）`CLAUDE.md`/`AGENTS.md` 是否有充分的项目上下文；（3）代码库结构是否良好。
 
 ### 版本管理
 - `.ttadk/` 目录：纳入版本管理（团队共享配置）。
 - `.ttadk/memory/constitution.md`：纳入版本管理，协作维护。
 - `CLAUDE.md` / `AGENTS.md`：纳入版本管理。
-- `specs/` 目录：建议纳入版本管理（定期用 `/adk:sdd:archive` 归档）。
+- `specs/` 目录：建议纳入版本管理（定期用 `/adk-sdd-archive` 归档）。
 - `specs/doc_export/`：加入 `.gitignore`（中间导出产物）。
 
 ### Monorepo

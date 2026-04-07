@@ -805,7 +805,7 @@ stateDiagram-v2
 
 ## Error Handling
 
-1. **No design artifacts found**: ERROR "Cannot generate TDD without at least spec.md or plan.md. Please run `/adk:sdd:specify` first."
+1. **No design artifacts found**: ERROR "Cannot generate TDD without at least spec.md or plan.md. Please run `/adk-sdd-specify` first."
 2. **Insufficient information for a section**: Omit that section entirely rather than marking "To be supplemented"
 3. **No Figma design link** (Frontend): Note in UI/UX section that design specs are pending
 4. **Lark upload failed**: Report error but ensure local file is generated successfully
@@ -849,7 +849,7 @@ stateDiagram-v2
 
 ## Important Notes
 
-1. **Incremental Updates**: If TDD needs adjustment after generation, use `/adk:sdd:clarify` to update design documents first
+1. **Incremental Updates**: If TDD needs adjustment after generation, use `/adk-sdd-clarify` to update design documents first
 2. **Team Collaboration**: TDD is meant for team technical review - encourage feedback
 3. **Living Document**: Regenerate TDD from source documents when major design changes occur
 4. **No Manual Edits**: Don't manually edit technical-design.md without updating source documents
@@ -866,7 +866,7 @@ Guide user to verify the generated technical-design.md is correct and meets expe
 
 **If needs adjustment**:
 
-- Run `/adk:sdd:clarify [feedback]`
+- Run `/adk-sdd-clarify [feedback]`
 
 ### Step 2 - Next Step Recommendation
 
@@ -874,9 +874,9 @@ Once technical design is confirmed and satisfactory:
 
 **Standard workflow**:
 
-- If `tasks.md` does NOT exist → Execute `/adk:sdd:tasks`
-- If `tasks.md` exists → Execute `/adk:sdd:implement`
+- If `tasks.md` does NOT exist → Execute `/adk-sdd-tasks`
+- If `tasks.md` exists → Execute `/adk-sdd-implement`
 
-**Fast-forward workflow (`/adk:sdd:ff`)**:
+**Fast-forward workflow (`/adk-sdd-ff`)**:
 
-- Execute `/adk:sdd:implement`
+- Execute `/adk-sdd-implement`

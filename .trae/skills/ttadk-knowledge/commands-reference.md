@@ -2,32 +2,32 @@
 
 ## 基础公共命令
 
-### /adk:help
+### /adk-help
 
 获取 TTADK 工作流、命令和当前项目状态的帮助，也可以用来问“下一步该做什么”。
 
-**用法**：`/adk:help [你的问题]`
+**用法**：`/adk-help [你的问题]`
 
 **示例**：
-- `/adk:help 下一步该做什么`
-- `/adk:help /adk:sdd:plan 命令怎么用`
-- `/adk:help readiness 报告怎么看`
+- `/adk-help 下一步该做什么`
+- `/adk-help /adk-sdd-plan 命令怎么用`
+- `/adk-help readiness 报告怎么看`
 
 ---
 
-### /adk:readiness
+### /adk-readiness
 
 扫描仓库的 AI Coding 就绪度，输出多维度成熟度报告与改进建议。
 
 **对应 skill**：`adk-readiness`
 
-**用法**：`/adk:readiness [可选参数说明]`
+**用法**：`/adk-readiness [可选参数说明]`
 
 **典型输入**：
-- `/adk:readiness`
-- `/adk:readiness only context and testing`
-- `/adk:readiness compare with last run`
-- `/adk:readiness target L3`
+- `/adk-readiness`
+- `/adk-readiness only context and testing`
+- `/adk-readiness compare with last run`
+- `/adk-readiness target L3`
 
 **适用场景**：
 - 刚接手一个仓库，想知道是否适合 AI 开发。
@@ -36,14 +36,14 @@
 
 ---
 
-### /adk:commit
+### /adk-commit
 
 提交当前工作区改动，自动生成规范化 commit message，并附加 TTADK Co-authored-by 签名。
 
-**用法**：`/adk:commit`
+**用法**：`/adk-commit`
 
 **重要说明**：
-- 推荐使用 `/adk:commit` 以确保 AI 代码贡献率被统计。
+- 推荐使用 `/adk-commit` 以确保 AI 代码贡献率被统计。
 - 如果存在远端，会尝试 push；如果 push 失败，会保留本地 commit 并提示用户手动处理。
 - 不会在 commit 流程中修改代码。
 
@@ -51,11 +51,11 @@
 
 ## SDD 命令
 
-### /adk:sdd:brainstorm
+### /adk-sdd-brainstorm
 
 对需求、ERD、资料链接或一个简单想法进行头脑风暴，帮助用户梳理方案并形成结构化思路文档。
 
-**用法**：`/adk:sdd:brainstorm <想法、资料或链接>`
+**用法**：`/adk-sdd-brainstorm <想法、资料或链接>`
 
 **适用场景**：
 - 需求还很模糊，需要先拆模块和讨论方案。
@@ -64,13 +64,13 @@
 
 ---
 
-### /adk:sdd:ff
+### /adk-sdd-ff
 
 Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核心制品。
 
 **对应 skill**：`adk-sdd-ff`
 
-**用法**：`/adk:sdd:ff <功能描述或飞书文档链接>`
+**用法**：`/adk-sdd-ff <功能描述或飞书文档链接>`
 
 **产出**：
 - `spec.md`
@@ -84,30 +84,30 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:constitution
+### /adk-sdd-constitution
 
 查看或更新项目宪章，定义项目级原则、编码标准和质量门禁。
 
-**用法**：`/adk:sdd:constitution [内容或飞书文档链接]`
+**用法**：`/adk-sdd-constitution [内容或飞书文档链接]`
 
 **示例**：
-- `/adk:sdd:constitution`
-- `/adk:sdd:constitution 新增规则：所有 API 端点必须有限流`
-- `/adk:sdd:constitution https://lark-doc-with-coding-standards`
+- `/adk-sdd-constitution`
+- `/adk-sdd-constitution 新增规则：所有 API 端点必须有限流`
+- `/adk-sdd-constitution https://lark-doc-with-coding-standards`
 
 **产出**：`.ttadk/memory/constitution.md`
 
 ---
 
-### /adk:sdd:specify
+### /adk-sdd-specify
 
 基于描述或飞书文档创建功能规格。
 
-**用法**：`/adk:sdd:specify <功能描述或飞书文档链接>`
+**用法**：`/adk-sdd-specify <功能描述或飞书文档链接>`
 
 **示例**：
-- `/adk:sdd:specify 构建一个支持邮件和站内信渠道的用户通知系统`
-- `/adk:sdd:specify https://lark-doc-link-to-prd`
+- `/adk-sdd-specify 构建一个支持邮件和站内信渠道的用户通知系统`
+- `/adk-sdd-specify https://lark-doc-link-to-prd`
 
 **前置条件**：通常无，是功能规格阶段的第一个核心命令。
 
@@ -115,15 +115,15 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:clarify
+### /adk-sdd-clarify
 
 通过交互式问答完善规格，并同步所有已存在的下游制品。
 
-**用法**：`/adk:sdd:clarify [可选的聚焦领域或反馈]`
+**用法**：`/adk-sdd-clarify [可选的聚焦领域或反馈]`
 
 **示例**：
-- `/adk:sdd:clarify`
-- `/adk:sdd:clarify 聚焦安全性需求`
+- `/adk-sdd-clarify`
+- `/adk-sdd-clarify 聚焦安全性需求`
 
 **前置条件**：`spec.md` 必须存在。
 
@@ -134,11 +134,11 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:plan
+### /adk-sdd-plan
 
 创建包含实现计划、调研结论、数据模型和接口契约的规划制品。
 
-**用法**：`/adk:sdd:plan [可选的约束条件]`
+**用法**：`/adk-sdd-plan [可选的约束条件]`
 
 **前置条件**：`spec.md` 必须存在。
 
@@ -151,11 +151,11 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:erd
+### /adk-sdd-erd
 
 生成技术设计文档，适合需要图表、分层说明或复杂交互说明的功能。
 
-**用法**：`/adk:sdd:erd [可选的聚焦领域]`
+**用法**：`/adk-sdd-erd [可选的聚焦领域]`
 
 **前置条件**：通常需要 `spec.md`，复杂场景建议已有 `plan.md`。
 
@@ -165,11 +165,11 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:tasks
+### /adk-sdd-tasks
 
 将实现计划拆解为依赖有序的原子化任务。
 
-**用法**：`/adk:sdd:tasks [可选的约束条件]`
+**用法**：`/adk-sdd-tasks [可选的约束条件]`
 
 **前置条件**：`spec.md` + `plan.md`
 
@@ -182,11 +182,11 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:analyze
+### /adk-sdd-analyze
 
 对 `spec.md`、`plan.md`、`tasks.md` 做只读的交叉一致性和质量分析。
 
-**用法**：`/adk:sdd:analyze [可选的聚焦领域]`
+**用法**：`/adk-sdd-analyze [可选的聚焦领域]`
 
 **前置条件**：`spec.md` + `plan.md` + `tasks.md`
 
@@ -198,29 +198,29 @@ Fast Forward 模式，一步生成 `spec.md`、`plan.md`、`tasks.md` 三个核�
 
 ---
 
-### /adk:sdd:implement
+### /adk-sdd-implement
 
 按照 `tasks.md` 的顺序执行实现任务并落地代码。
 
-**用法**：`/adk:sdd:implement [可选：任务 ID、Phase 或反馈]`
+**用法**：`/adk-sdd-implement [可选：任务 ID、Phase 或反馈]`
 
 **示例**：
-- `/adk:sdd:implement`
-- `/adk:sdd:implement Phase 2`
-- `/adk:sdd:implement 修复支付模块的错误处理`
+- `/adk-sdd-implement`
+- `/adk-sdd-implement Phase 2`
+- `/adk-sdd-implement 修复支付模块的错误处理`
 
 **前置条件**：`spec.md` + `plan.md` + `tasks.md`
 
 ---
 
-### /adk:sdd:archive
+### /adk-sdd-archive
 
 归档历史功能制品，维护归档索引并压缩旧功能目录。
 
 **用法**：
-- `/adk:sdd:archive`
-- `/adk:sdd:archive --dry-run`
-- `/adk:sdd:archive --json`
+- `/adk-sdd-archive`
+- `/adk-sdd-archive --dry-run`
+- `/adk-sdd-archive --json`
 
 **适用场景**：
 - 功能已经完成，想精简 `specs/` 目录。
@@ -332,26 +332,26 @@ TTADK 的异步 handoff CLI，用于提交、查看、继续、停止和同步�
 
 | 命令 / 能力 | 对应 skill | 说明 |
 |------------|------------|------|
-| `/adk:readiness` | `adk-readiness` | 评估仓库 readiness |
-| `/adk:help` | `adk-help` | 回答 TTADK、SDD 工作流与当前下一步 |
+| `/adk-readiness` | `adk-readiness` | 评估仓库 readiness |
+| `/adk-help` | `adk-help` | 回答 TTADK、SDD 工作流与当前下一步 |
 | `ttadk handoff *` | 无独立 skill | 通过命令管理 handoff 异步任务 |
 
 ### SDD Skill / Command 对照
 
 | 命令 | 对应 skill | 产出/作用 |
 |------|------------|-----------|
-| `/adk:sdd:brainstorm` | `adk-sdd-brainstorm` | 头脑风暴与方案梳理 |
-| `/adk:sdd:ff` | `adk-sdd-ff` | 一步生成 `spec.md`、`plan.md`、`tasks.md` |
-| `/adk:sdd:constitution` | `adk-sdd-constitution` | 维护项目原则 |
-| `/adk:sdd:specify` | `adk-sdd-specify` | 创建 `spec.md` |
-| `/adk:sdd:clarify` | `adk-sdd-clarify` | 澄清并同步设计制品 |
-| `/adk:sdd:plan` | `adk-sdd-plan` | 创建实现计划与设计骨架 |
-| `/adk:sdd:erd` | `adk-sdd-erd` | 生成技术设计文档 |
-| `/adk:sdd:tasks` | `adk-sdd-tasks` | 拆解实现任务 |
-| `/adk:sdd:analyze` | `adk-sdd-analyze` | 只读分析制品质量 |
-| `/adk:sdd:implement` | `adk-sdd-implement` | 执行任务并实现代码 |
-| `/adk:commit` | `adk-commit` | 提交当前改动 |
-| `/adk:sdd:archive` | `adk-sdd-archive` | 归档历史制品 |
+| `/adk-sdd-brainstorm` | `adk-sdd-brainstorm` | 头脑风暴与方案梳理 |
+| `/adk-sdd-ff` | `adk-sdd-ff` | 一步生成 `spec.md`、`plan.md`、`tasks.md` |
+| `/adk-sdd-constitution` | `adk-sdd-constitution` | 维护项目原则 |
+| `/adk-sdd-specify` | `adk-sdd-specify` | 创建 `spec.md` |
+| `/adk-sdd-clarify` | `adk-sdd-clarify` | 澄清并同步设计制品 |
+| `/adk-sdd-plan` | `adk-sdd-plan` | 创建实现计划与设计骨架 |
+| `/adk-sdd-erd` | `adk-sdd-erd` | 生成技术设计文档 |
+| `/adk-sdd-tasks` | `adk-sdd-tasks` | 拆解实现任务 |
+| `/adk-sdd-analyze` | `adk-sdd-analyze` | 只读分析制品质量 |
+| `/adk-sdd-implement` | `adk-sdd-implement` | 执行任务并实现代码 |
+| `/adk-commit` | `adk-commit` | 提交当前改动 |
+| `/adk-sdd-archive` | `adk-sdd-archive` | 归档历史制品 |
 
 ### 完整功能开发
 
@@ -360,29 +360,29 @@ ttadk init my-project -t claude -p ttadk/backend
 cd my-project && ttadk config && ttadk code
 
 /init
-/adk:readiness
-/adk:sdd:constitution
-/adk:sdd:brainstorm "想法或资料"      # 可选
-/adk:sdd:specify "功能描述"
-/adk:sdd:clarify
-/adk:sdd:plan
-/adk:sdd:erd                         # 可选
-/adk:sdd:tasks
-/adk:sdd:analyze                     # 可选
-/adk:sdd:implement
-/adk:commit
-/adk:sdd:archive
+/adk-readiness
+/adk-sdd-constitution
+/adk-sdd-brainstorm "想法或资料"      # 可选
+/adk-sdd-specify "功能描述"
+/adk-sdd-clarify
+/adk-sdd-plan
+/adk-sdd-erd                         # 可选
+/adk-sdd-tasks
+/adk-sdd-analyze                     # 可选
+/adk-sdd-implement
+/adk-commit
+/adk-sdd-archive
 ```
 
 ### 快速推进
 
 ```bash
-/adk:readiness
-/adk:sdd:brainstorm "构建一个数据仪表板"   # 可选
-/adk:sdd:ff "构建一个数据仪表板"
-/adk:sdd:clarify "增加日期范围筛选"        # 如需修正
-/adk:sdd:implement
-/adk:commit
+/adk-readiness
+/adk-sdd-brainstorm "构建一个数据仪表板"   # 可选
+/adk-sdd-ff "构建一个数据仪表板"
+/adk-sdd-clarify "增加日期范围筛选"        # 如需修正
+/adk-sdd-implement
+/adk-commit
 ```
 
 ### 异步 Handoff 协作

@@ -30,13 +30,13 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 
 ## Goal
 
-Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/adk:sdd:tasks` has successfully produced a complete `tasks.md`.
+Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/adk-sdd-tasks` has successfully produced a complete `tasks.md`.
 
 ## Operating Constraints
 
 **STRICTLY READ-ONLY**: Do **not** modify any files. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
 
-**Constitution Authority**: The project constitution (`.ttadk/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/adk:sdd:analyze`.
+**Constitution Authority**: The project constitution (`.ttadk/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/adk-sdd-analyze`.
 
 ## Execution Steps
 
@@ -171,9 +171,9 @@ Output a Markdown report (no file writes) with the following structure:
 
 At end of report, output a concise Next Actions block:
 
-- If CRITICAL issues exist: Recommend resolving before `/adk:sdd:implement`
+- If CRITICAL issues exist: Recommend resolving before `/adk-sdd-implement`
 - If only LOW/MEDIUM: User may proceed, but provide improvement suggestions
-- Provide explicit command suggestions: e.g., "Run `/adk:sdd:clarify` to refine the current spec", "Run `/adk:sdd:plan` to adjust architecture", "Update `tasks.md` to add coverage for 'performance-metrics'"
+- Provide explicit command suggestions: e.g., "Run `/adk-sdd-clarify` to refine the current spec", "Run `/adk-sdd-plan` to adjust architecture", "Update `tasks.md` to add coverage for 'performance-metrics'"
 
 ### 8. Offer Remediation
 

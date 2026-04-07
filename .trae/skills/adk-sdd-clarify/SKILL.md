@@ -35,14 +35,14 @@ Note: This clarification workflow can run at ANY point during the design stage. 
 **Core Principle**: Check which design-stage documents exist, and update ALL of them to maintain consistency.
 
 **Design Stage Commands & Artifacts**:
-- `/adk:sdd:specify` → `spec.md`
-- `/adk:sdd:plan` → `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
-- `/adk:sdd:erd` → `technical-design.md` (Technical Design Document)
-- `/adk:sdd:tasks` → `tasks.md`
+- `/adk-sdd-specify` → `spec.md`
+- `/adk-sdd-plan` → `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
+- `/adk-sdd-erd` → `technical-design.md` (Technical Design Document)
+- `/adk-sdd-tasks` → `tasks.md`
 
 **Usage Examples**:
-- Run after `/adk:sdd:specify` only → Updates only `spec.md`
-- Run after `/adk:sdd:specify` + `/adk:sdd:plan` → Updates `spec.md` + all `/adk:sdd:plan` outputs
+- Run after `/adk-sdd-specify` only → Updates only `spec.md`
+- Run after `/adk-sdd-specify` + `/adk-sdd-plan` → Updates `spec.md` + all `/adk-sdd-plan` outputs
 - Run after full design stage → Updates all design artifacts (spec, plan, erd, tasks)
 
 Execution steps:
@@ -50,16 +50,16 @@ Execution steps:
 1. **Discover existing design artifacts:**
     - Run `node .ttadk/plugins/ttadk/core/resources/scripts/check-prerequisites.js --json --paths-only` from repo root **once**
     - Parse JSON payload fields: `FEATURE_DIR`, `FEATURE_SPEC`, `IMPL_PLAN`, `TASKS`
-    - If JSON parsing fails, abort and instruct user to re-run `/adk:sdd:specify` or verify feature directory environment.
+    - If JSON parsing fails, abort and instruct user to re-run `/adk-sdd-specify` or verify feature directory environment.
     - **Explicitly check which design-stage documents exist** using Read tool for each file:
-      * `FEATURE_DIR/spec.md` (REQUIRED - from `/adk:sdd:specify`)
-      * `FEATURE_DIR/plan.md` (from `/adk:sdd:plan`)
-      * `FEATURE_DIR/research.md` (from `/adk:sdd:plan` Phase 0)
-      * `FEATURE_DIR/data-model.md` (from `/adk:sdd:plan` Phase 1)
-      * `FEATURE_DIR/contracts/` directory (from `/adk:sdd:plan` Phase 1)
-      * `FEATURE_DIR/quickstart.md` (from `/adk:sdd:plan` Phase 1)
-      * `FEATURE_DIR/tasks.md` (from `/adk:sdd:tasks`)
-      * `FEATURE_DIR/technical-design.md` (from `/adk:sdd:erd`)
+      * `FEATURE_DIR/spec.md` (REQUIRED - from `/adk-sdd-specify`)
+      * `FEATURE_DIR/plan.md` (from `/adk-sdd-plan`)
+      * `FEATURE_DIR/research.md` (from `/adk-sdd-plan` Phase 0)
+      * `FEATURE_DIR/data-model.md` (from `/adk-sdd-plan` Phase 1)
+      * `FEATURE_DIR/contracts/` directory (from `/adk-sdd-plan` Phase 1)
+      * `FEATURE_DIR/quickstart.md` (from `/adk-sdd-plan` Phase 1)
+      * `FEATURE_DIR/tasks.md` (from `/adk-sdd-tasks`)
+      * `FEATURE_DIR/technical-design.md` (from `/adk-sdd-erd`)
     - **Build and maintain a DISCOVERED_DOCS tracking list** with existence status for each document:
       ```
       DISCOVERED_DOCS = {
@@ -201,7 +201,7 @@ Execution steps:
     - **ONLY update documents that exist** - skip non-existent files.
     - Update documents in dependency order to maintain consistency:
 
-    **A. Update `/adk:sdd:plan` outputs (if they exist):**
+    **A. Update `/adk-sdd-plan` outputs (if they exist):**
 
     **If `plan.md` exists:**
     - Read existing `plan.md` to understand current implementation approach.
@@ -246,7 +246,7 @@ Execution steps:
       * Add new steps if functional requirements expanded
     - Save updated quickstart.md.
 
-    **B. Update `/adk:sdd:erd` outputs (if they exist):**
+    **B. Update `/adk-sdd-erd` outputs (if they exist):**
 
     **If `technical-design.md` exists:**
     - Read existing `technical-design.md` to understand current technical design (architecture, data model, interfaces, etc.).
@@ -259,7 +259,7 @@ Execution steps:
       * Ensure all Mermaid diagrams follow correct syntax
     - Save updated technical-design.md.
 
-    **C. Update `/adk:sdd:tasks` outputs (if they exist):**
+    **C. Update `/adk-sdd-tasks` outputs (if they exist):**
 
     **If `tasks.md` exists:** ← **THIS IS MANDATORY IF tasks.md EXISTS**
     - Read existing `tasks.md` to understand current task breakdown.
@@ -320,12 +320,12 @@ Execution steps:
 
     - **If any document exists but was NOT updated, you MUST provide explicit reasoning in the table**
     - Coverage summary table listing each taxonomy category with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
-    - If any Outstanding or Deferred remain, recommend whether to proceed to `/adk:sdd:plan` or `/adk:sdd:erd` or `/adk:sdd:tasks` or run `/adk:sdd:clarify` again.
+    - If any Outstanding or Deferred remain, recommend whether to proceed to `/adk-sdd-plan` or `/adk-sdd-erd` or `/adk-sdd-tasks` or run `/adk-sdd-clarify` again.
     - Suggested next command.
 
 Behavior rules:
 - If no meaningful ambiguities found (or all potential questions would be low-impact), respond: "No critical ambiguities detected worth formal clarification." and suggest proceeding.
-- If spec file missing, instruct user to run `/adk:sdd:specify` first (do not create a new spec here).
+- If spec file missing, instruct user to run `/adk-sdd-specify` first (do not create a new spec here).
 - Never exceed 5 total asked questions (clarification retries for a single question do not count as new questions).
 - Avoid speculative tech stack questions unless the absence blocks functional clarity.
 - Respect user early termination signals ("stop", "done", "proceed") - **but ALWAYS execute Step 6 before reporting**.
@@ -349,12 +349,12 @@ After executing this command, provide next-step guidance to user:
 ### Step 1 - Confirmation
 Guide user to verify the updated documents are correct.
 
-**If needs adjustment**: Run `/adk:sdd:clarify [feedback]` again to continue refining the documents.
+**If needs adjustment**: Run `/adk-sdd-clarify [feedback]` again to continue refining the documents.
 
 ### Step 2 - Next Step Recommendation
 Once documents are confirmed and satisfactory, recommend the next command based on existing documents:
 
-- If only `spec.md` exists → Execute `/adk:sdd:plan`
-- If `spec.md` + `plan.md` exist but no `tasks.md` → Execute `/adk:sdd:tasks`
-- If all documents exist → Execute `/adk:sdd:implement`
+- If only `spec.md` exists → Execute `/adk-sdd-plan`
+- If `spec.md` + `plan.md` exist but no `tasks.md` → Execute `/adk-sdd-tasks`
+- If all documents exist → Execute `/adk-sdd-implement`
 - If unclear which stage the user is in → Do not make explicit recommendation, let user decide

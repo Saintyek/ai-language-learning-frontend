@@ -135,9 +135,9 @@ After executing this command, provide next-step guidance to user:
 ### Step 1 - Confirmation
 Guide user to verify the generated tasks.md is correct and task breakdown is complete.
 
-**If needs adjustment**: Run `/adk:sdd:clarify [feedback]` to refine the tasks.
+**If needs adjustment**: Run `/adk-sdd-clarify [feedback]` to refine the tasks.
 
 ### Step 2 - Next Step Recommendation
 Once tasks are confirmed and satisfactory:
 
-**Start Implementation**: Execute `/adk:sdd:implement` to begin implementing the tasks sequentially.
+**Start Implementation**: Execute `/adk-sdd-implement` to begin implementing the tasks sequentially.

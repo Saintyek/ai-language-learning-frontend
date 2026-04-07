@@ -30,9 +30,9 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 
 ## Usage Examples
 
-- Archive all specs: `/adk:sdd:archive`
-- Preview what would be archived (dry-run): `/adk:sdd:archive --dry-run`
-- Output in JSON format: `/adk:sdd:archive --json`
+- Archive all specs: `/adk-sdd-archive`
+- Preview what would be archived (dry-run): `/adk-sdd-archive --dry-run`
+- Output in JSON format: `/adk-sdd-archive --json`
 
 ## Command Execution
 

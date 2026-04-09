@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+:root {
+  --app-navbar-height: 5rem;
+}
+
+.app-layout-with-fixed-navbar > .h-screen {
+  height: calc(100vh - var(--app-navbar-height));
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -13,4 +21,17 @@
 
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
+}
+
+.chat-shell__composer-wrap .semi-aiChatInput {
+  border-color: rgba(148, 163, 184, 0.28);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.chat-shell__composer-wrap:focus-within .semi-aiChatInput {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
 }

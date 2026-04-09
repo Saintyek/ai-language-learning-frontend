@@ -1,36 +1,136 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Button, Input } from '@douyinfe/semi-ui'
-import { IconSend } from '@douyinfe/semi-icons'
+import { AIChatDialogue, AIChatInput } from '@douyinfe/semi-ui'
+import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/interface'
+import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 import { languageOptions } from '@/consts/languages'
 import DigitalHumanStage from '@/components/DigitalHumanStage'
 import { getDigitalHumanStatus, type DigitalHumanInfo } from '@/api/digitalHuman'
 import 'flag-icons/css/flag-icons.min.css'
 
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
+const buildChatMessage = (
+  role: 'user' | 'assistant',
+  content: string,
+  status: 'in_progress' | 'completed' | 'cancelled' = 'completed'
+): AIChatMessage => ({
+  id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  role,
+  content,
+  createdAt: Date.now(),
+  status,
+})
+
+// AIChatInput 返回结构化内容，这里只提取当前页面需要的纯文本消息。
+const extractPlainText = (inputContents?: Content[]) => {
+  if (!inputContents?.length) return ''
+
+  return inputContents
+    .filter((item): item is Content & { text?: string } => item.type === 'text')
+    .map(item => item.text ?? '')
+    .join('')
+    .trim()
 }
 
 const Chat: React.FC = () => {
   const { langCode } = useParams<{ langCode: string }>()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
+  const [chats, setChats] = useState<AIChatMessage[]>([])
+  const [generating, setGenerating] = useState(false)
   const [digitalHuman, setDigitalHuman] = useState<DigitalHumanInfo>({ status: 'not_created' })
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [showInputTopFade, setShowInputTopFade] = useState(false)
+  const responseTimerRef = useRef<number | null>(null)
+  const chatPanelRef = useRef<HTMLDivElement | null>(null)
 
-  // 获取当前语言信息
   const currentLanguage = languageOptions.find(lang => lang.code === langCode)
+  const languageLabel = currentLanguage?.label || '语言'
 
-  // 仅在有消息更新时滚动到底部
-  useEffect(() => {
-    if (messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  // 建议开场语依赖当前语言，切换语言时同步更新，避免在渲染期间重复创建数组。
+  const hintPrompts = useMemo(
+    () => [
+      `请用${languageLabel}和我做一个简单的自我介绍练习`,
+      `请模拟一个${languageLabel}餐厅点餐对话`,
+      `帮我练习${languageLabel}旅行常用表达`,
+      `请纠正我用${languageLabel}说这句话的语法`,
+    ],
+    [languageLabel]
+  )
+
+  const roleConfig = useMemo(
+    () => ({
+      user: {
+        name: '我',
+        color: 'blue',
+      },
+      assistant: {
+        name: `${languageLabel}导师`,
+        color: 'indigo',
+      },
+    }),
+    [languageLabel]
+  )
+
+  // 停止生成时同时清理定时器，并把最后一条生成中的 assistant 消息标记为 cancelled。
+  const stopGenerating = () => {
+    if (responseTimerRef.current !== null) {
+      window.clearTimeout(responseTimerRef.current)
+      responseTimerRef.current = null
     }
-  }, [messages])
+
+    setChats(prev => {
+      const next = [...prev]
+      for (let index = next.length - 1; index >= 0; index -= 1) {
+        if (next[index].role === 'assistant' && next[index].status === 'in_progress') {
+          next[index] = {
+            ...next[index],
+            status: 'cancelled',
+          }
+          break
+        }
+      }
+      return next
+    })
+    setGenerating(false)
+  }
+
+  // 当前仍使用本地模拟回复，后续接真实接口时可以在这里替换为请求/流式更新逻辑。
+  const simulateAIResponse = (userMessage: string) => {
+    const assistantId = `assistant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    setGenerating(true)
+    setChats(prev => [
+      ...prev,
+      {
+        id: assistantId,
+        role: 'assistant',
+        content: '',
+        createdAt: Date.now(),
+        status: 'in_progress',
+      },
+    ])
+
+    responseTimerRef.current = window.setTimeout(() => {
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === assistantId
+            ? {
+                ...chat,
+                content: `你好！我是你的${languageLabel}学习助手。你说的是：“${userMessage}”。让我们开始练习吧！`,
+                status: 'completed',
+              }
+            : chat
+        )
+      )
+      responseTimerRef.current = null
+      setGenerating(false)
+    }, 1000)
+  }
+
+  const handleSubmitText = (text: string) => {
+    const trimmedText = text.trim()
+    if (!trimmedText || generating) return
+
+    setChats(prev => [...prev, buildChatMessage('user', trimmedText)])
+    simulateAIResponse(trimmedText)
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -52,77 +152,59 @@ const Chat: React.FC = () => {
     }
   }, [])
 
-  const simulateAIResponse = (userMessage: string) => {
-    setIsTyping(true)
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `你好！我是你的${currentLanguage?.label || '语言'}学习助手。你说的是："${userMessage}"。让我们开始练习吧！`,
-        timestamp: new Date(),
+  useEffect(() => {
+    // 组件卸载时兜底清理未完成的回复，避免定时器在页面离开后继续写状态。
+    return () => {
+      if (responseTimerRef.current !== null) {
+        window.clearTimeout(responseTimerRef.current)
       }
-      setMessages(prev => [...prev, aiResponse])
-      setIsTyping(false)
-    }, 1000)
-  }
+    }
+  }, [])
 
-  // 发送消息
-  const handleSend = () => {
-    if (!inputValue.trim()) return
+  useEffect(() => {
+    const chatPanel = chatPanelRef.current
+    if (!chatPanel) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputValue.trim(),
-      timestamp: new Date(),
+    const scrollContainer = chatPanel.querySelector<HTMLElement>('.semi-ai-chat-dialogue-list')
+    if (!scrollContainer) return
+
+    const syncInputFade = () => {
+      const hasScrollableOverflow = scrollContainer.scrollHeight - scrollContainer.clientHeight > 8
+      setShowInputTopFade(hasScrollableOverflow && scrollContainer.scrollTop > 8)
     }
 
-    setMessages(prev => [...prev, userMessage])
-    setInputValue('')
-    simulateAIResponse(inputValue.trim())
-  }
+    syncInputFade()
+    scrollContainer.addEventListener('scroll', syncInputFade, { passive: true })
 
-  // 按回车发送
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+    return () => {
+      scrollContainer.removeEventListener('scroll', syncInputFade)
     }
-  }
+  }, [chats.length])
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* 主要内容区域 */}
       <div className="flex-1 flex overflow-hidden">
-        {/* 左侧数字人区域 */}
+        {/* 左侧数字人 */}
         <div className="hidden lg:flex w-2/5 xl:w-1/3 bg-gradient-to-b from-indigo-100/50 to-purple-100/50 flex-col items-center justify-center p-8 border-r border-slate-200/30">
           <div className="relative">
-            {/* 光环效果 */}
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full blur-3xl opacity-30 animate-pulse" />
             <div className="absolute inset-4 bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full blur-2xl opacity-40" />
 
-            {/* 数字人容器 */}
             <DigitalHumanStage
               status={digitalHuman.status}
               imageUrl={digitalHuman.frontendPicUrl}
-              isThinking={isTyping}
-              languageLabel={currentLanguage?.label || '语言'}
+              isThinking={generating}
+              languageLabel={languageLabel}
             />
-
-            {/* 装饰元素 */}
-            <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white text-lg">AI</span>
-            </div>
           </div>
 
           <div className="mt-8 text-center">
             <h2 className="text-2xl font-bold text-slate-800 mb-2">AI 语言导师</h2>
             <p className="text-slate-600 max-w-xs">
-              我将帮助你练习{currentLanguage?.label || '语言'}， 通过自然对话提升你的语言能力
+              我将帮助你练习{languageLabel}， 通过自然对话提升你的语言能力
             </p>
           </div>
 
-          {/* 学习统计 */}
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 shadow-sm">
               <div className="text-2xl font-bold text-blue-600">12</div>
@@ -139,109 +221,48 @@ const Chat: React.FC = () => {
           </div>
         </div>
 
-        {/* 右侧聊天区域 */}
-        <div className="flex-1 flex flex-col bg-white/50">
-          {/* 消息列表 */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mb-4">
-                  <svg
-                    className="w-10 h-10 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-lg font-medium">开始你的语言学习之旅</p>
-                <p className="text-sm mt-2">在下方输入框中输入你想说的话</p>
-              </div>
-            ) : (
-              messages.map(message => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
-                      message.role === 'user'
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-br-md'
-                        : 'bg-white text-slate-700 rounded-bl-md border border-slate-100'
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                    <p
-                      className={`text-xs mt-1 ${message.role === 'user' ? 'text-blue-100' : 'text-slate-400'}`}
-                    >
-                      {message.timestamp.toLocaleTimeString('zh-CN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-
-            {/* AI 正在输入 */}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border border-slate-100">
-                  <div className="flex items-center gap-1">
-                    <span
-                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                      style={{ animationDelay: '0ms' }}
-                    />
-                    <span
-                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                      style={{ animationDelay: '150ms' }}
-                    />
-                    <span
-                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                      style={{ animationDelay: '300ms' }}
-                    />
-                  </div>
-                </div>
+        {/* 右侧对话框 */}
+        <div className="flex-1 overflow-hidden bg-white/45 p-4">
+          <div
+            ref={chatPanelRef}
+            className="chat-shell mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-white/65 bg-white/78 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+          >
+            {chats.length === 0 && (
+              <div className="px-6 pt-6 text-center">
+                <p className="text-lg font-semibold text-slate-700">
+                  开始你的{languageLabel}对话练习
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  试试下面的建议开场语，或者直接输入你想说的话。
+                </p>
               </div>
             )}
 
-            <div ref={messagesEndRef} />
-          </div>
+            <div className="chat-shell__dialogue flex-1 min-h-0 overflow-hidden px-3 pt-3">
+              <AIChatDialogue
+                chats={chats}
+                roleConfig={roleConfig}
+                align="leftRight"
+                mode="bubble"
+                hints={chats.length === 0 ? hintPrompts : []}
+                onHintClick={handleSubmitText}
+                className="h-full"
+                style={{ height: '100%' }}
+              />
+            </div>
 
-          {/* 输入区域 */}
-          <div className="flex-shrink-0 p-4 bg-white/80 backdrop-blur-sm border-t border-slate-200/50">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-end gap-3">
-                <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                  <Input
-                    value={inputValue}
-                    onChange={setInputValue}
-                    onKeyPress={handleKeyPress}
-                    placeholder="输入你想说的话..."
-                    className="border-none shadow-none"
-                    style={{ fontSize: '16px' }}
-                  />
-                </div>
-                <Button
-                  theme="solid"
-                  type="primary"
-                  icon={<IconSend />}
-                  onClick={handleSend}
-                  disabled={!inputValue.trim()}
-                  className="rounded-xl h-12 w-12"
-                  style={{ background: 'linear-gradient(to right, #3b82f6, #6366f1)' }}
-                />
-              </div>
-              <p className="text-xs text-slate-400 mt-2 text-center">
-                按 Enter 发送消息，Shift + Enter 换行
-              </p>
+            <div className="chat-shell__composer-wrap flex-shrink-0 px-3 pb-3 pt-2">
+              <AIChatInput
+                keepSkillAfterSend={false}
+                placeholder={`用${languageLabel}开始对话...`}
+                sendHotKey="enter"
+                generating={generating}
+                showUploadButton={false}
+                onMessageSend={({ inputContents }) => {
+                  handleSubmitText(extractPlainText(inputContents))
+                }}
+                onStopGenerate={stopGenerating}
+              />
             </div>
           </div>
         </div>

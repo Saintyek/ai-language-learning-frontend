@@ -11,7 +11,9 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      <AppRoutes />
+      <main className={hideFooter ? 'app-layout-with-fixed-navbar pt-20' : ''}>
+        <AppRoutes />
+      </main>
       {!hideFooter && <Footer />}
     </div>
   )

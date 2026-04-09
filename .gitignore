@@ -18,6 +18,9 @@ dist-ssr
 .idea
 .playwright-mcp
 .DS_Store
+.trae
+.ttadk
+.claude
 *.suo
 *.ntvs*
 *.njsproj

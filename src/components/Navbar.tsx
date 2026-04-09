@@ -130,8 +130,8 @@ const Navbar: React.FC = () => {
   }, [location.pathname, location.state])
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+    <header className="fixed top-0 left-0 right-0 z-50 h-20 bg-white shadow-sm">
+      <div className="container mx-auto h-full px-4 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-blue-600">
           AI语言学习
         </Link>

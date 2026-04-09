@@ -60,7 +60,7 @@ request.interceptors.response.use(
         case 400:
           errorMessage = serverMessage || '请求参数错误'
           break
-        case 401:
+        case 401: {
           errorMessage = serverMessage || '未授权，请重新登录'
           // 如果是登录或注册接口，不自动跳转
           const url = error.config?.url || ''
@@ -70,6 +70,7 @@ request.interceptors.response.use(
             window.location.href = '/login'
           }
           break
+        }
         case 403:
           errorMessage = serverMessage || '拒绝访问'
           break

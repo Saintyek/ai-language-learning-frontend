@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Button, Input, Avatar } from '@douyinfe/semi-ui'
+import { Button, Input } from '@douyinfe/semi-ui'
 import { IconSend } from '@douyinfe/semi-icons'
 import { languageOptions } from '@/consts/languages'
+import DigitalHumanStage from '@/components/DigitalHumanStage'
+import { getDigitalHumanStatus, type DigitalHumanInfo } from '@/api/digitalHuman'
 import 'flag-icons/css/flag-icons.min.css'
 
 interface Message {
@@ -17,6 +19,7 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [digitalHuman, setDigitalHuman] = useState<DigitalHumanInfo>({ status: 'not_created' })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // 获取当前语言信息
@@ -29,7 +32,26 @@ const Chat: React.FC = () => {
     }
   }, [messages])
 
-  // 模拟 AI 回复
+  useEffect(() => {
+    let isMounted = true
+
+    getDigitalHumanStatus()
+      .then(data => {
+        if (isMounted) {
+          setDigitalHuman(data)
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setDigitalHuman({ status: 'failed' })
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const simulateAIResponse = (userMessage: string) => {
     setIsTyping(true)
     setTimeout(() => {
@@ -79,14 +101,13 @@ const Chat: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full blur-3xl opacity-30 animate-pulse" />
             <div className="absolute inset-4 bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full blur-2xl opacity-40" />
 
-            {/* 头像容器 */}
-            <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-white via-blue-50 to-indigo-100 shadow-2xl flex items-center justify-center border-4 border-white/50">
-              <Avatar
-                size="large"
-                src="https://lf3-static.bytednsdoc.com/obj/eden-cn/ptlz_zlp/ljhwZthlaukjlkulzlp/avatar/default-avatar.svg"
-                className="shadow-xl"
-              />
-            </div>
+            {/* 数字人容器 */}
+            <DigitalHumanStage
+              status={digitalHuman.status}
+              imageUrl={digitalHuman.frontendPicUrl}
+              isThinking={isTyping}
+              languageLabel={currentLanguage?.label || '语言'}
+            />
 
             {/* 装饰元素 */}
             <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">

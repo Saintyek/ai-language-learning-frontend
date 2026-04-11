@@ -4,49 +4,83 @@ import { Link } from 'react-router-dom'
 import { languageOptions } from '@/consts/languages'
 
 const Languages: React.FC = () => {
-  const previewLanguages = languageOptions.slice(0, 10)
-  const halfLength = Math.ceil(previewLanguages.length / 2)
-  const leftColumn = previewLanguages.slice(0, halfLength)
-  const rightColumn = previewLanguages.slice(halfLength)
+  const leftColumn = languageOptions.slice(0, 2)
+  const rightColumn = languageOptions.slice(2)
+
+  const renderLanguageCard = (language: (typeof languageOptions)[number]) => (
+    <Link
+      key={language.code}
+      to={`/${language.code}/chat`}
+      className="group rounded-[28px] border border-white/70 bg-white/80 p-6 text-center shadow-[0_18px_48px_rgba(15,23,42,0.10)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-sky-200/90 hover:bg-white/90 hover:shadow-[0_26px_70px_rgba(14,165,233,0.18)] focus:outline-none focus:ring-4 focus:ring-sky-200/80"
+    >
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[22px] border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_12px_28px_rgba(14,165,233,0.14)] transition-transform duration-300 group-hover:scale-105">
+        <span className={`fi fi-${language.code} rounded-xl text-5xl`} aria-hidden="true" />
+      </div>
+      <h3 className="mt-5 text-2xl font-bold tracking-tight text-slate-900">{language.label}</h3>
+      <p className="mt-3 text-sm leading-6 text-slate-500">{language.scene}</p>
+      <span className="mt-4 inline-flex items-center rounded-full border border-sky-100 bg-sky-50/85 px-3 py-1 text-xs font-medium tracking-[0.16em] text-sky-700">
+        {language.tag}
+      </span>
+    </Link>
+  )
 
   return (
-    <section className="py-36 bg-blue-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-            多语言核心 <span className="text-blue-600">🌍</span>
+    <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(191,219,254,0.9),_rgba(239,246,255,0.78)_36%,_#f8fbff_68%,_#eef4ff_100%)] py-36">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-16 h-64 w-64 -translate-x-1/2 rounded-full bg-cyan-200/35 blur-3xl" />
+        <div className="absolute left-[12%] top-32 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
+        <div className="absolute right-[10%] bottom-20 h-72 w-72 rounded-full bg-blue-300/20 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:84px_84px] opacity-35" />
+      </div>
+
+      <div className="relative container mx-auto px-4">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center rounded-full border border-white/70 bg-white/70 px-4 py-2 text-sm font-semibold tracking-[0.22em] text-sky-700 uppercase shadow-[0_10px_30px_rgba(14,116,144,0.12)] backdrop-blur-md">
+            AI Language Paths
+          </span>
+          <h2 className="mt-6 text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
+            四种语言，一眼选中
           </h2>
-          <p className="text-gray-600">我们支持以下语言的学习：</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">
+            把语言入口做得更聚焦。你可以从最常用的四种练习路径中，快速找到最适合自己的对话场景。
+          </p>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-center gap-32">
-          <ul className="space-y-3">
-            {leftColumn.map(language => (
-              <li key={language.label} className="flex items-center">
-                <span className={`fi fi-${language.code} mr-3`} />
-                <span className="text-gray-800 text-xl">{language.label}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="mt-16 grid items-center gap-6 lg:grid-cols-[minmax(220px,1fr)_minmax(340px,520px)_minmax(220px,1fr)]">
+          <div className="grid gap-5">{leftColumn.map(renderLanguageCard)}</div>
 
-          <ul className="space-y-3">
-            {rightColumn.map(language => (
-              <li key={language.label} className="flex items-center">
-                <span className={`fi fi-${language.code} mr-3`} />
-                <span className="text-gray-800 text-xl">{language.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          <div className="relative overflow-hidden rounded-[36px] border border-white/75 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.96),_rgba(239,246,255,0.88)_55%,_rgba(219,234,254,0.92)_100%)] px-8 py-12 text-center shadow-[0_30px_90px_rgba(37,99,235,0.16)] backdrop-blur-2xl">
+            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/70 to-transparent" />
+            <div className="absolute left-1/2 top-10 h-44 w-44 -translate-x-1/2 rounded-full bg-cyan-200/30 blur-3xl" />
+            <div className="relative">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-2xl text-sky-600 shadow-[0_12px_28px_rgba(14,165,233,0.14)]">
+                ✦
+              </div>
+              <p className="mt-6 text-sm font-semibold tracking-[0.24em] text-sky-700 uppercase">
+                AI Learning Matrix
+              </p>
+              <h3 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+                点击语言卡片
+                <br />
+                直接开始对话
+              </h3>
+              <p className="mx-auto mt-5 max-w-md text-base leading-7 text-slate-600">
+                现在首页就是语言入口。选中任一语言后，会直接进入对应的 AI 对话练习页，省去额外跳转。
+              </p>
+              <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/80 bg-white/75 px-4 py-3 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">直接进入</p>
+                  <p className="mt-2 text-sm text-slate-600">点击卡片后立即进入对应语言聊天页。</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 px-4 py-3 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">四种精选</p>
+                  <p className="mt-2 text-sm text-slate-600">保留高频练习语言，让选择更明确。</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 mb-4">...更多语言即将推出 ❤️</p>
-          <Link
-            to="/languages"
-            className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
-          >
-            立即开始学习一种新的语言 →
-          </Link>
+          <div className="grid gap-5">{rightColumn.map(renderLanguageCard)}</div>
         </div>
       </div>
     </section>

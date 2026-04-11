@@ -14,7 +14,7 @@ const Banner = () => {
       navigate('/login')
       return
     }
-    navigate('/languages')
+    navigate('/', { state: { scrollTo: '#languages' } })
   }
 
   return (

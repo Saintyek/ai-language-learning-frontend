@@ -48,14 +48,14 @@ const Navbar: React.FC = () => {
 
   const [activeKey, setActiveKey] = useState('')
 
-  const chatRouteMatch = matchPath('/languages/:langCode/chat', location.pathname)
+  const chatRouteMatch = matchPath('/:langCode/chat', location.pathname)
   const currentLanguage = languageOptions.find(lang => lang.code === chatRouteMatch?.params.langCode)
   const languageDropdownItems = languageOptions
     .filter(lang => lang.code !== currentLanguage?.code)
     .map(lang => ({
       node: 'item' as const,
       name: lang.label,
-      onClick: () => navigate(`/languages/${lang.code}/chat`),
+      onClick: () => navigate(`/${lang.code}/chat`),
       icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
     }))
 

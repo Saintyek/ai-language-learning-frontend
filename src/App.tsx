@@ -10,7 +10,7 @@ const AUTH_REQUIRED_TOAST_KEY = 'authRequiredToast'
 const AppLayout = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const hideFooter = Boolean(matchPath('/languages/:langCode/chat', location.pathname))
+  const hideFooter = Boolean(matchPath('/:langCode/chat', location.pathname))
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)

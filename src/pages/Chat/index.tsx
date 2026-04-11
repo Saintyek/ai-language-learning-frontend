@@ -1,19 +1,26 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AIChatDialogue, AIChatInput } from '@douyinfe/semi-ui'
+import { Toast, AIChatDialogue, AIChatInput } from '@douyinfe/semi-ui'
 import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/interface'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 import { languageOptions } from '@/consts/languages'
 import DigitalHumanStage from '@/components/DigitalHumanStage'
+import { streamChatMessage, type ChatMessagePayload } from '@/api/chat'
 import { getDigitalHumanStatus, type DigitalHumanInfo } from '@/api/digitalHuman'
 import 'flag-icons/css/flag-icons.min.css'
 
-const buildChatMessage = (
-  role: 'user' | 'assistant',
-  content: string,
-  status: 'in_progress' | 'completed' | 'cancelled' = 'completed'
-): AIChatMessage => ({
-  id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+const buildChatMessage = ({
+  id,
+  role,
+  content,
+  status = 'completed',
+}: {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  status?: 'in_progress' | 'completed' | 'cancelled'
+}): AIChatMessage => ({
+  id,
   role,
   content,
   createdAt: Date.now(),
@@ -31,17 +38,61 @@ const extractPlainText = (inputContents?: Content[]) => {
     .trim()
 }
 
+const getChatTextContent = (content: AIChatMessage['content']) => {
+  if (typeof content === 'string') {
+    return content.trim()
+  }
+
+  return ''
+}
+
 const Chat: React.FC = () => {
   const { langCode } = useParams<{ langCode: string }>()
   const [chats, setChats] = useState<AIChatMessage[]>([])
   const [generating, setGenerating] = useState(false)
   const [digitalHuman, setDigitalHuman] = useState<DigitalHumanInfo>({ status: 'not_created' })
-  const [showInputTopFade, setShowInputTopFade] = useState(false)
-  const responseTimerRef = useRef<number | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
   const chatPanelRef = useRef<HTMLDivElement | null>(null)
+  const messageIdSeedRef = useRef(0)
 
   const currentLanguage = languageOptions.find(lang => lang.code === langCode)
   const languageLabel = currentLanguage?.label || '语言'
+
+  const buildRequestMessages = (userMessage: string): ChatMessagePayload[] => {
+    const systemPrompt = `你是一名${languageLabel}语言学习助手。请围绕${languageLabel}口语练习、纠错和场景对话来回答，优先使用${languageLabel}回复；当用户明显看不懂时，可以补充简短中文解释。`
+
+    const historyMessages = chats.flatMap<ChatMessagePayload>(chat => {
+      const textContent = getChatTextContent(chat.content)
+      if (chat.status === 'cancelled' || !textContent) {
+        return []
+      }
+
+      return [
+        {
+          role: chat.role as ChatMessagePayload['role'],
+          content: textContent,
+          id: chat.id,
+        },
+      ]
+    })
+
+    return [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      ...historyMessages,
+      {
+        role: 'user',
+        content: userMessage,
+      },
+    ]
+  }
+
+  const createMessageId = (role: 'user' | 'assistant') => {
+    messageIdSeedRef.current += 1
+    return `${role}-${Date.now()}-${messageIdSeedRef.current}`
+  }
 
   // 建议开场语依赖当前语言，切换语言时同步更新，避免在渲染期间重复创建数组。
   const hintPrompts = useMemo(
@@ -68,68 +119,111 @@ const Chat: React.FC = () => {
     [languageLabel]
   )
 
-  // 停止生成时同时清理定时器，并把最后一条生成中的 assistant 消息标记为 cancelled。
-  const stopGenerating = () => {
-    if (responseTimerRef.current !== null) {
-      window.clearTimeout(responseTimerRef.current)
-      responseTimerRef.current = null
-    }
-
+  const markLatestAssistantMessage = (
+    status: 'completed' | 'cancelled',
+    fallbackContent?: string,
+  ) => {
     setChats(prev => {
       const next = [...prev]
       for (let index = next.length - 1; index >= 0; index -= 1) {
         if (next[index].role === 'assistant' && next[index].status === 'in_progress') {
           next[index] = {
             ...next[index],
-            status: 'cancelled',
+            content: next[index].content || fallbackContent || next[index].content,
+            status,
           }
           break
         }
       }
       return next
     })
+  }
+
+  const stopGenerating = () => {
+    abortControllerRef.current?.abort()
+    abortControllerRef.current = null
+    markLatestAssistantMessage('cancelled', '已停止生成')
     setGenerating(false)
   }
 
-  // 当前仍使用本地模拟回复，后续接真实接口时可以在这里替换为请求/流式更新逻辑。
-  const simulateAIResponse = (userMessage: string) => {
-    const assistantId = `assistant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const handleSubmitText = async (text: string) => {
+    const trimmedText = text.trim()
+    if (!trimmedText || generating) return
 
+    const assistantId = createMessageId('assistant')
+    const abortController = new AbortController()
+    const messages = buildRequestMessages(trimmedText)
+
+    abortControllerRef.current = abortController
     setGenerating(true)
     setChats(prev => [
       ...prev,
-      {
+      buildChatMessage({
+        id: createMessageId('user'),
+        role: 'user',
+        content: trimmedText,
+      }),
+      buildChatMessage({
         id: assistantId,
         role: 'assistant',
         content: '',
-        createdAt: Date.now(),
         status: 'in_progress',
-      },
+      }),
     ])
 
-    responseTimerRef.current = window.setTimeout(() => {
+    try {
+      await streamChatMessage({
+        messages,
+        signal: abortController.signal,
+        onChunk: chunk => {
+          setChats(prev =>
+            prev.map(chat =>
+              chat.id === assistantId
+                ? {
+                    ...chat,
+                    content: `${chat.content}${chunk}`,
+                  }
+                : chat
+            )
+          )
+        },
+      })
+
       setChats(prev =>
         prev.map(chat =>
           chat.id === assistantId
             ? {
                 ...chat,
-                content: `你好！我是你的${languageLabel}学习助手。你说的是：“${userMessage}”。让我们开始练习吧！`,
+                content: chat.content || '本次对话暂无返回内容',
                 status: 'completed',
               }
             : chat
         )
       )
-      responseTimerRef.current = null
+    } catch (error) {
+      if (abortController.signal.aborted) {
+        return
+      }
+
+      const message = error instanceof Error ? error.message : '对话生成失败，请稍后重试'
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === assistantId
+            ? {
+                ...chat,
+                content: chat.content || message,
+                status: 'cancelled',
+              }
+            : chat
+        )
+      )
+      Toast.error(message)
+    } finally {
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+      }
       setGenerating(false)
-    }, 1000)
-  }
-
-  const handleSubmitText = (text: string) => {
-    const trimmedText = text.trim()
-    if (!trimmedText || generating) return
-
-    setChats(prev => [...prev, buildChatMessage('user', trimmedText)])
-    simulateAIResponse(trimmedText)
+    }
   }
 
   useEffect(() => {
@@ -153,11 +247,9 @@ const Chat: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    // 组件卸载时兜底清理未完成的回复，避免定时器在页面离开后继续写状态。
+    // 组件卸载时中止流式请求，避免页面离开后继续写状态。
     return () => {
-      if (responseTimerRef.current !== null) {
-        window.clearTimeout(responseTimerRef.current)
-      }
+      abortControllerRef.current?.abort()
     }
   }, [])
 
@@ -168,18 +260,8 @@ const Chat: React.FC = () => {
     const scrollContainer = chatPanel.querySelector<HTMLElement>('.semi-ai-chat-dialogue-list')
     if (!scrollContainer) return
 
-    const syncInputFade = () => {
-      const hasScrollableOverflow = scrollContainer.scrollHeight - scrollContainer.clientHeight > 8
-      setShowInputTopFade(hasScrollableOverflow && scrollContainer.scrollTop > 8)
-    }
-
-    syncInputFade()
-    scrollContainer.addEventListener('scroll', syncInputFade, { passive: true })
-
-    return () => {
-      scrollContainer.removeEventListener('scroll', syncInputFade)
-    }
-  }, [chats.length])
+    scrollContainer.scrollTop = scrollContainer.scrollHeight
+  }, [chats])
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">

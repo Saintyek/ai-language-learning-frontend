@@ -4,6 +4,7 @@ import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import LanguageSelection from '@/pages/LanguageSelection'
 import Chat from '@/pages/Chat'
+import RequireAuth from '@/routes/RequireAuth'
 
 const routes: RouteObject[] = [
   {
@@ -20,11 +21,19 @@ const routes: RouteObject[] = [
   },
   {
     path: '/languages',
-    element: <LanguageSelection />,
+    element: (
+      <RequireAuth>
+        <LanguageSelection />
+      </RequireAuth>
+    ),
   },
   {
     path: '/languages/:langCode/chat',
-    element: <Chat />,
+    element: (
+      <RequireAuth>
+        <Chat />
+      </RequireAuth>
+    ),
   },
 ]
 

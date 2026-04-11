@@ -66,8 +66,10 @@ request.interceptors.response.use(
           const url = error.config?.url || ''
           if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
             localStorage.removeItem('token')
+            localStorage.removeItem('userId')
             localStorage.removeItem('userInfo')
-            window.location.href = '/login'
+            localStorage.removeItem('authExpiry')
+            window.location.href = '/?auth=required'
           }
           break
         }

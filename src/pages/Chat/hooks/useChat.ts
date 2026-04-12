@@ -6,6 +6,8 @@ import { languageOptions } from '@/consts/languages'
 
 interface ChatHookProps {
   langCode: string | undefined
+  /** 场景值数组，如 ['role', '扮演老师'] */
+  sceneValue?: string[]
 }
 
 export interface UseChatReturn {
@@ -46,7 +48,7 @@ const buildChatMessage = ({
   status,
 })
 
-export default function useChat({ langCode }: ChatHookProps): UseChatReturn {
+export default function useChat({ langCode, sceneValue }: ChatHookProps): UseChatReturn {
   const [chats, setChats] = useState<AIChatMessage[]>([])
   const [generating, setGenerating] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -54,6 +56,11 @@ export default function useChat({ langCode }: ChatHookProps): UseChatReturn {
 
   const currentLanguage = languageOptions.find(lang => lang.code === langCode)
   const languageLabel = currentLanguage?.label || '语言'
+
+  // 构建场景标识，格式为 "一级场景/二级场景"
+  const scenarioKey = sceneValue && sceneValue.length >= 2
+    ? `${sceneValue[0]}/${sceneValue[1]}`
+    : undefined
 
   const extractPlainText = useCallback((inputContents?: Content[]): string => {
     if (!inputContents?.length) return ''
@@ -78,6 +85,9 @@ export default function useChat({ langCode }: ChatHookProps): UseChatReturn {
 
   const buildRequestMessages = useCallback(
     (userMessage: string): ChatMessagePayload[] => {
+      // 如果有场景，后端会注入场景 prompt，前端不再添加默认 system prompt
+      const shouldAddSystemPrompt = !scenarioKey
+
       const systemPrompt = `你是一名${languageLabel}语言学习助手。请围绕${languageLabel}口语练习、纠错和场景对话来回答，优先使用${languageLabel}回复；当用户明显看不懂时，可以补充简短中文解释。`
 
       const historyMessages = chats.flatMap<ChatMessagePayload>(chat => {
@@ -94,13 +104,18 @@ export default function useChat({ langCode }: ChatHookProps): UseChatReturn {
         ]
       })
 
-      return [
-        { role: 'system', content: systemPrompt },
-        ...historyMessages,
-        { role: 'user', content: userMessage },
-      ]
+      const messages: ChatMessagePayload[] = []
+
+      if (shouldAddSystemPrompt) {
+        messages.push({ role: 'system', content: systemPrompt })
+      }
+
+      messages.push(...historyMessages)
+      messages.push({ role: 'user', content: userMessage })
+
+      return messages
     },
-    [chats, getChatTextContent, languageLabel]
+    [chats, getChatTextContent, languageLabel, scenarioKey]
   )
 
   const markLatestAssistantMessage = useCallback(
@@ -160,6 +175,8 @@ export default function useChat({ langCode }: ChatHookProps): UseChatReturn {
         await streamChatMessage({
           messages,
           signal: abortController.signal,
+          scenario: scenarioKey,
+          language: langCode,
           onChunk: chunk => {
             setChats(prev =>
               prev.map(chat =>
@@ -202,7 +219,7 @@ export default function useChat({ langCode }: ChatHookProps): UseChatReturn {
         setGenerating(false)
       }
     },
-    [buildRequestMessages, createMessageId, generating]
+    [buildRequestMessages, createMessageId, generating, scenarioKey, langCode]
   )
 
   const hintPrompts = useMemo(

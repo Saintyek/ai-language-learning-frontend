@@ -4,6 +4,29 @@ import { sceneOptions, type SceneOption } from '@/consts/scenes'
 // 每个二级按钮的估计宽度（包含padding和gap）
 const ESTIMATED_BUTTON_WIDTH = 100
 
+const buildDefaultIndices = (count: number) => Array.from({ length: count }, (_, index) => index)
+
+const normalizeVisibleIndices = (indices: number[], totalCount: number, count: number) => {
+  const next: number[] = []
+  const used = new Set<number>()
+
+  for (const index of indices) {
+    if (index >= 0 && index < totalCount && !used.has(index) && next.length < count) {
+      next.push(index)
+      used.add(index)
+    }
+  }
+
+  for (let index = 0; index < totalCount && next.length < count; index += 1) {
+    if (!used.has(index)) {
+      next.push(index)
+      used.add(index)
+    }
+  }
+
+  return next
+}
+
 export interface UseSceneSelectionReturn {
   sceneValue: string[]
   setSceneValue: (value: string[]) => void
@@ -11,8 +34,7 @@ export interface UseSceneSelectionReturn {
   selectedSecondLevel: string | null
   visibleButtonIndices: number[]
   handleSceneChange: (value: string[]) => void
-  handleSecondLevelClick: (option: SceneOption, index: number) => void
-  handleCascaderSelect: (value: string[]) => void
+  handleSecondLevelClick: (option: SceneOption) => void
   containerRef: React.RefObject<HTMLDivElement>
 }
 
@@ -23,11 +45,11 @@ export interface UseSceneSelectionReturn {
 export default function useSceneSelection(): UseSceneSelectionReturn {
   // 级联选择器的值 [一级value, 二级value]
   const [sceneValue, setSceneValue] = useState<string[]>([])
-  // 优先显示的二级选项索引（用于处理点击未显示选项的情况）
-  const [priorityIndex, setPriorityIndex] = useState<number>(-1)
   // 容器宽度
   const [containerWidth, setContainerWidth] = useState(0)
+  const [visibleButtonIndices, setVisibleButtonIndices] = useState<number[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
+  const previousFirstLevelRef = useRef<string | null>(null)
 
   // 获取当前选中的一级选项的二级子选项
   const currentSecondLevelOptions = useMemo(() => {
@@ -37,11 +59,18 @@ export default function useSceneSelection(): UseSceneSelectionReturn {
     return firstLevelOption?.children || []
   }, [sceneValue])
 
+  const currentFirstLevel = sceneValue[0] ?? null
+
   // 获取当前选中的二级选项
   const selectedSecondLevel = useMemo(() => {
     if (sceneValue.length < 2) return null
     return sceneValue[1]
   }, [sceneValue])
+
+  const selectedSecondLevelIndex = useMemo(() => {
+    if (!selectedSecondLevel) return -1
+    return currentSecondLevelOptions.findIndex(option => option.value === selectedSecondLevel)
+  }, [currentSecondLevelOptions, selectedSecondLevel])
 
   // 计算可以显示的按钮数量
   const visibleButtonsCount = useMemo(() => {
@@ -53,39 +82,48 @@ export default function useSceneSelection(): UseSceneSelectionReturn {
     return Math.max(0, Math.floor(availableWidth / ESTIMATED_BUTTON_WIDTH))
   }, [containerWidth, currentSecondLevelOptions.length])
 
-  // 获取可见按钮的索引列表（考虑优先级）
-  const visibleButtonIndices = useMemo(() => {
-    if (!visibleButtonsCount || !currentSecondLevelOptions.length) return []
+  useEffect(() => {
+    const totalCount = currentSecondLevelOptions.length
+    const count = Math.min(visibleButtonsCount, totalCount)
+
+    if (!count) {
+      setVisibleButtonIndices([])
+      previousFirstLevelRef.current = currentFirstLevel
+      return
+    }
+
+    const isFirstLevelChanged = previousFirstLevelRef.current !== currentFirstLevel
+    previousFirstLevelRef.current = currentFirstLevel
+
+    setVisibleButtonIndices(prev => {
+      if (isFirstLevelChanged) {
+        return buildDefaultIndices(count)
+      }
+      return normalizeVisibleIndices(prev, totalCount, count)
+    })
+  }, [currentFirstLevel, currentSecondLevelOptions.length, visibleButtonsCount])
+
+  useEffect(() => {
+    if (selectedSecondLevelIndex < 0) {
+      return
+    }
 
     const totalCount = currentSecondLevelOptions.length
     const count = Math.min(visibleButtonsCount, totalCount)
 
-    // 如果有优先级索引，确保它在可见范围内
-    if (priorityIndex >= 0 && priorityIndex < totalCount) {
-      // 优先级选项放在第一个位置，其他选项顺延
-      const indices: number[] = [priorityIndex]
-      let beforeIndex = priorityIndex - 1
-      let afterIndex = priorityIndex + 1
-
-      while (indices.length < count) {
-        // 优先填充后面的选项
-        if (afterIndex < totalCount) {
-          indices.push(afterIndex)
-          afterIndex++
-        } else if (beforeIndex >= 0) {
-          indices.push(beforeIndex)
-          beforeIndex--
-        } else {
-          break
-        }
-      }
-
-      return indices
+    if (!count) {
+      return
     }
 
-    // 没有优先级时，按顺序显示前N个
-    return Array.from({ length: count }, (_, i) => i)
-  }, [visibleButtonsCount, currentSecondLevelOptions.length, priorityIndex])
+    setVisibleButtonIndices(prev => {
+      const normalizedPrev = normalizeVisibleIndices(prev, totalCount, count)
+      if (normalizedPrev.includes(selectedSecondLevelIndex)) {
+        return normalizedPrev
+      }
+
+      return [selectedSecondLevelIndex, ...normalizedPrev].slice(0, count)
+    })
+  }, [currentSecondLevelOptions.length, selectedSecondLevelIndex, visibleButtonsCount])
 
   // 使用 ResizeObserver 监听容器宽度变化
   useEffect(() => {
@@ -104,43 +142,17 @@ export default function useSceneSelection(): UseSceneSelectionReturn {
   // 处理级联选择器变化
   const handleSceneChange = useCallback((value: string[]) => {
     setSceneValue(value)
-    // 重置优先级索引
-    setPriorityIndex(-1)
   }, [])
 
   // 处理二级选项按钮点击
-  const handleSecondLevelClick = useCallback(
-    (option: SceneOption, index: number) => {
-      // 如果点击的选项不在可见范围内，将其设为优先级
-      if (!visibleButtonIndices.includes(index)) {
-        setPriorityIndex(index)
+  const handleSecondLevelClick = useCallback((option: SceneOption) => {
+    setSceneValue(prev => {
+      if (!prev.length) {
+        return prev
       }
-      // 更新级联选择器的值
-      if (sceneValue.length > 0) {
-        setSceneValue([sceneValue[0], option.value])
-      }
-    },
-    [sceneValue, visibleButtonIndices]
-  )
-
-  // 处理级联选择器中二级菜单的选择
-  const handleCascaderSelect = useCallback(
-    (value: string[]) => {
-      if (value.length >= 2) {
-        const firstLevelValue = value[0]
-        const secondLevelValue = value[1]
-        const firstLevelOption = sceneOptions.find(opt => opt.value === firstLevelValue)
-        const secondLevelIndex =
-          firstLevelOption?.children?.findIndex(child => child.value === secondLevelValue) ?? -1
-
-        // 如果选择的二级选项不在可见范围内，设为优先级
-        if (secondLevelIndex >= 0 && !visibleButtonIndices.includes(secondLevelIndex)) {
-          setPriorityIndex(secondLevelIndex)
-        }
-      }
-    },
-    [visibleButtonIndices]
-  )
+      return [prev[0], option.value]
+    })
+  }, [])
 
   return {
     sceneValue,
@@ -150,7 +162,6 @@ export default function useSceneSelection(): UseSceneSelectionReturn {
     visibleButtonIndices,
     handleSceneChange,
     handleSecondLevelClick,
-    handleCascaderSelect,
     containerRef,
   }
 }

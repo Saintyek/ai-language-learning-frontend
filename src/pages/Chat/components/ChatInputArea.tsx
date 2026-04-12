@@ -41,7 +41,7 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         sendHotKey="enter"
         generating={generating}
         showUploadButton={false}
-        renderConfigureArea={(className?: string) => (
+        renderConfigureArea={() => (
           <SceneSelector
             {...sceneSelection}
             sceneDropdownVisible={sceneDropdownVisible}

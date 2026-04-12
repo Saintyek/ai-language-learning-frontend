@@ -1,15 +1,8 @@
 import React, { useCallback } from 'react'
 import { IconChevronRight, IconChevronUp } from '@douyinfe/semi-icons'
-import { Cascader, getConfigureItem, Button } from '@douyinfe/semi-ui'
+import { Cascader, Button } from '@douyinfe/semi-ui'
 import { sceneOptions, type SceneOption } from '@/consts/scenes'
 import type { UseSceneSelectionReturn } from '../hooks/useSceneSelection'
-
-const SceneCascader = getConfigureItem(
-  (props: React.ComponentProps<typeof Cascader>) => <Cascader {...props} />,
-  {
-    className: 'aiChatInput-cascader-configure',
-  }
-)
 
 interface SceneSelectorProps extends UseSceneSelectionReturn {
   sceneDropdownVisible: boolean
@@ -30,7 +23,6 @@ export const SceneSelector: React.FC<SceneSelectorProps> = ({
   setSceneDropdownVisible,
   handleSceneChange,
   handleSecondLevelClick,
-  handleCascaderSelect,
 }) => {
   const renderSceneButtons = useCallback(() => {
     if (!currentSecondLevelOptions.length) return null
@@ -49,34 +41,34 @@ export const SceneSelector: React.FC<SceneSelectorProps> = ({
           minWidth: 0,
         }}
       >
-        {currentSecondLevelOptions
-          .filter((_, index) => visibleButtonIndices.includes(index))
-          .map(option => {
-            const originalIndex = currentSecondLevelOptions.findIndex(
-              opt => opt.value === option.value
-            )
-            const isSelected = selectedSecondLevel === option.value
+        {visibleButtonIndices.map(index => {
+          const option = currentSecondLevelOptions[index]
+          if (!option) {
+            return null
+          }
 
-            return (
-              <Button
-                key={option.value}
-                theme={isSelected ? 'solid' : 'borderless'}
-                type={isSelected ? 'primary' : 'tertiary'}
-                size="small"
-                onClick={() => handleSecondLevelClick(option, originalIndex)}
-                style={{
-                  borderRadius: 16,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  backgroundColor: isSelected ? '#3b82f6' : 'rgba(59, 130, 246, 0.08)',
-                  color: isSelected ? '#ffffff' : '#2563eb',
-                  border: isSelected ? 'none' : '1px solid rgba(59, 130, 246, 0.22)',
-                }}
-              >
-                {option.label}
-              </Button>
-            )
-          })}
+          const isSelected = selectedSecondLevel === option.value
+
+          return (
+            <Button
+              key={option.value}
+              theme={isSelected ? 'solid' : 'borderless'}
+              type={isSelected ? 'primary' : 'tertiary'}
+              size="small"
+              onClick={() => handleSecondLevelClick(option)}
+              style={{
+                borderRadius: 16,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                backgroundColor: isSelected ? '#3b82f6' : 'rgba(59, 130, 246, 0.08)',
+                color: isSelected ? '#ffffff' : '#2563eb',
+                border: isSelected ? 'none' : '1px solid rgba(59, 130, 246, 0.22)',
+              }}
+            >
+              {option.label}
+            </Button>
+          )
+        })}
       </div>
     )
   }, [
@@ -89,16 +81,15 @@ export const SceneSelector: React.FC<SceneSelectorProps> = ({
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-      <SceneCascader
-        field="scene"
+      <Cascader
+        className="aiChatInput-cascader-configure"
         treeData={sceneOptions}
         value={sceneValue}
         position="topLeft"
         dropdownClassName="chat-scene-cascader-dropdown"
         arrowIcon={sceneDropdownVisible ? <IconChevronRight /> : <IconChevronUp />}
         onDropdownVisibleChange={setSceneDropdownVisible}
-        onChange={handleSceneChange}
-        onSelect={handleCascaderSelect}
+        onChange={value => handleSceneChange(Array.isArray(value) ? value.map(String) : [])}
         placeholder="选择场景"
         changeOnSelect
         separator=" / "

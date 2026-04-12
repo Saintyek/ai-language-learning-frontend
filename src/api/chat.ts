@@ -8,6 +8,10 @@ export interface StreamChatParams {
   messages: ChatMessagePayload[]
   signal?: AbortSignal
   onChunk: (chunk: string) => void
+  /** 场景标识，格式为 "一级场景/二级场景" */
+  scenario?: string
+  /** 目标学习语言：cn-中文, jp-日文, kr-韩语, us-美式英语 */
+  language?: string
 }
 
 interface StreamEventPayload {
@@ -180,11 +184,13 @@ export const streamChatMessage = async ({
   messages,
   signal,
   onChunk,
+  scenario,
+  language,
 }: StreamChatParams): Promise<void> => {
   const response = await fetch(`${getApiBaseUrl()}/api/chat/messages/stream`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, scenario, language }),
     signal,
   })
 

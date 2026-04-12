@@ -15,8 +15,8 @@ const Chat: React.FC = () => {
   const chatPanelRef = useRef<HTMLDivElement>(null)
 
   // 使用自定义 Hooks
-  const chat = useChat({ langCode })
   const sceneSelection = useSceneSelection()
+  const chat = useChat({ langCode, sceneValue: sceneSelection.sceneValue })
   const { digitalHuman } = useDigitalHuman()
 
   // 自动滚动到底部

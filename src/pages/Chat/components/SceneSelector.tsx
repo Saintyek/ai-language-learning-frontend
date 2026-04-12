@@ -54,7 +54,6 @@ export const SceneSelector: React.FC<SceneSelectorProps> = ({
               key={option.value}
               theme={isSelected ? 'solid' : 'borderless'}
               type={isSelected ? 'primary' : 'tertiary'}
-              size="small"
               onClick={() => handleSecondLevelClick(option)}
               style={{
                 borderRadius: 16,

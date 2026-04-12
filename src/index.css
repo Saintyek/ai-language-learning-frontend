@@ -35,3 +35,20 @@
   border-color: rgba(99, 102, 241, 0.5);
   box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
 }
+
+.chat-scene-cascader-dropdown .semi-cascader-option-lists {
+  height: auto;
+}
+
+.chat-scene-cascader-dropdown .semi-cascader-option-list {
+  height: 260px;
+  max-height: 260px;
+}
+
+.chat-scene-cascader-dropdown .semi-cascader-option-list:first-child {
+  overflow-y: hidden;
+}
+
+.chat-scene-cascader-dropdown .semi-cascader-option-list:not(:first-child) {
+  overflow-y: auto;
+}

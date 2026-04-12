@@ -1,4 +1,5 @@
 import { Button, Toast } from '@douyinfe/semi-ui'
+import { IconAIFilledLevel1 } from '@douyinfe/semi-icons'
 import { useNavigate } from 'react-router-dom'
 import { isAuthenticated } from '@/api/auth'
 
@@ -32,6 +33,8 @@ const Banner = () => {
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Button
                 theme="solid"
+                colorful
+                icon={<IconAIFilledLevel1 />}
                 type="primary"
                 size="large"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full"

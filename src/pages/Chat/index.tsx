@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Toast, AIChatDialogue, AIChatInput } from '@douyinfe/semi-ui'
+import { IconChevronRight, IconChevronUp } from '@douyinfe/semi-icons'
+import { Toast, AIChatDialogue, AIChatInput, Cascader, getConfigureItem } from '@douyinfe/semi-ui'
 import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/interface'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 import { languageOptions } from '@/consts/languages'
+import { sceneOptions } from '@/consts/scenes'
 import DigitalHumanStage from '@/components/DigitalHumanStage'
 import { streamChatMessage, type ChatMessagePayload } from '@/api/chat'
 import { getDigitalHumanStatus, type DigitalHumanInfo } from '@/api/digitalHuman'
@@ -46,11 +48,19 @@ const getChatTextContent = (content: AIChatMessage['content']) => {
   return ''
 }
 
+const SceneCascader = getConfigureItem(
+  (props: React.ComponentProps<typeof Cascader>) => <Cascader {...props} />,
+  {
+    className: 'aiChatInput-cascader-configure',
+  }
+)
+
 const Chat: React.FC = () => {
   const { langCode } = useParams<{ langCode: string }>()
   const [chats, setChats] = useState<AIChatMessage[]>([])
   const [generating, setGenerating] = useState(false)
   const [digitalHuman, setDigitalHuman] = useState<DigitalHumanInfo>({ status: 'not_created' })
+  const [sceneDropdownVisible, setSceneDropdownVisible] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
   const chatPanelRef = useRef<HTMLDivElement | null>(null)
   const messageIdSeedRef = useRef(0)
@@ -119,9 +129,34 @@ const Chat: React.FC = () => {
     [languageLabel]
   )
 
+  const renderConfigureArea = useCallback(
+    () => (
+      <SceneCascader
+        field="scene"
+        treeData={sceneOptions}
+        position="topLeft"
+        dropdownClassName="chat-scene-cascader-dropdown"
+        arrowIcon={sceneDropdownVisible ? <IconChevronRight /> : <IconChevronUp />}
+        onDropdownVisibleChange={setSceneDropdownVisible}
+        placeholder="选择场景"
+        changeOnSelect
+        separator=" / "
+        style={{
+          width: 150,
+          borderRadius: 20,
+          backgroundColor: 'rgba(59, 130, 246, 0.08)',
+          border: '1px solid rgba(59, 130, 246, 0.22)',
+          color: '#2563eb',
+          fontWeight: 500,
+        }}
+      />
+    ),
+    [sceneDropdownVisible]
+  )
+
   const markLatestAssistantMessage = (
     status: 'completed' | 'cancelled',
-    fallbackContent?: string,
+    fallbackContent?: string
   ) => {
     setChats(prev => {
       const next = [...prev]
@@ -307,7 +342,7 @@ const Chat: React.FC = () => {
         <div className="flex-1 overflow-hidden bg-white/45 p-4">
           <div
             ref={chatPanelRef}
-            className="chat-shell mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-white/65 bg-white/78 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+            className="chat-shell flex h-full w-full flex-col overflow-hidden rounded-[32px] border border-white/65 bg-white/78 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
           >
             {chats.length === 0 && (
               <div className="px-6 pt-6 text-center">
@@ -340,6 +375,7 @@ const Chat: React.FC = () => {
                 sendHotKey="enter"
                 generating={generating}
                 showUploadButton={false}
+                renderConfigureArea={renderConfigureArea}
                 onMessageSend={({ inputContents }) => {
                   handleSubmitText(extractPlainText(inputContents))
                 }}

@@ -39,10 +39,10 @@ const Languages: React.FC = () => {
             AI Language Paths
           </span>
           <h2 className="mt-6 text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
-            四种语言，一眼选中
+            四种语言，AI 陪练
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-            把语言入口做得更聚焦。你可以从最常用的四种练习路径中，快速找到最适合自己的对话场景。
+            无论你想学习中文、日语、韩语还是英语，AI 都能陪你进行真实场景的对话练习，让语言学习更高效有趣。
           </p>
         </div>
 
@@ -60,21 +60,21 @@ const Languages: React.FC = () => {
                 AI Learning Matrix
               </p>
               <h3 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
-                点击语言卡片
+                智能 AI 对话
                 <br />
-                直接开始对话
+                沉浸式语言学习
               </h3>
               <p className="mx-auto mt-5 max-w-md text-base leading-7 text-slate-600">
-                现在首页就是语言入口。选中任一语言后，会直接进入对应的 AI 对话练习页，省去额外跳转。
+                通过自然的 AI 对话，在真实场景中练习语言，获得即时反馈和个性化指导，快速提升听说能力。
               </p>
               <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
                 <div className="rounded-2xl border border-white/80 bg-white/75 px-4 py-3 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">直接进入</p>
-                  <p className="mt-2 text-sm text-slate-600">点击卡片后立即进入对应语言聊天页。</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">智能陪练</p>
+                  <p className="mt-2 text-sm text-slate-600">AI 24小时在线，随时开始语言对话练习。</p>
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 px-4 py-3 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">四种精选</p>
-                  <p className="mt-2 text-sm text-slate-600">保留高频练习语言，让选择更明确。</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">多语言支持</p>
+                  <p className="mt-2 text-sm text-slate-600">覆盖中英日韩四种主流语言，满足多样学习需求。</p>
                 </div>
               </div>
             </div>

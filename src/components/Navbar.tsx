@@ -48,8 +48,15 @@ const Navbar: React.FC = () => {
 
   const [activeKey, setActiveKey] = useState('')
 
+  const isHomePage = location.pathname === '/'
   const chatRouteMatch = matchPath('/:langCode/chat', location.pathname)
   const currentLanguage = languageOptions.find(lang => lang.code === chatRouteMatch?.params.langCode)
+  const practiceDropdownItems = languageOptions.map(lang => ({
+    node: 'item' as const,
+    name: lang.label,
+    onClick: () => navigate(`/${lang.code}/chat`),
+    icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
+  }))
   const languageDropdownItems = languageOptions
     .filter(lang => lang.code !== currentLanguage?.code)
     .map(lang => ({
@@ -160,6 +167,20 @@ const Navbar: React.FC = () => {
 
         {/* 登录/注册按钮 */}
         <div className="hidden md:flex items-center space-x-3">
+          {isHomePage ? (
+            <Dropdown trigger="click" position="bottomRight" menu={practiceDropdownItems}>
+              <span>
+                <Button
+                  icon={<IconChevronDown />}
+                  iconPosition="right"
+                  theme="borderless"
+                  style={{ fontSize: '14px' }}
+                >
+                  开始练习
+                </Button>
+              </span>
+            </Dropdown>
+          ) : null}
           {isLoggedIn ? (
             <>
               {currentLanguage ? (

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Button, Dropdown } from '@douyinfe/semi-ui'
-import { IconChevronDown } from '@douyinfe/semi-icons'
+import { IconChevronDown, IconHistory, IconReply } from '@douyinfe/semi-icons'
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { getUserInfo, isAuthenticated, clearAuthData } from '@/api/auth'
 import { languageOptions } from '@/consts/languages'
+import ChatHistorySideSheet from '@/components/ChatHistory/ChatHistorySideSheet'
 import 'flag-icons/css/flag-icons.min.css'
 
 const Navbar: React.FC = () => {
@@ -11,6 +12,8 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')
+  const [chatHistoryVisible, setChatHistoryVisible] = useState(false)
+  const [userDropdownVisible, setUserDropdownVisible] = useState(false)
 
   // 检查登录状态
   useEffect(() => {
@@ -50,7 +53,9 @@ const Navbar: React.FC = () => {
 
   const isHomePage = location.pathname === '/'
   const chatRouteMatch = matchPath('/:langCode/chat', location.pathname)
-  const currentLanguage = languageOptions.find(lang => lang.code === chatRouteMatch?.params.langCode)
+  const currentLanguage = languageOptions.find(
+    lang => lang.code === chatRouteMatch?.params.langCode
+  )
   const practiceDropdownItems = languageOptions.map(lang => ({
     node: 'item' as const,
     name: lang.label,
@@ -74,6 +79,12 @@ const Navbar: React.FC = () => {
     // 触发退出登录事件
     window.dispatchEvent(new Event('authChange'))
     navigate('/')
+  }
+
+  // 打开聊天记录侧边栏
+  const handleOpenChatHistory = () => {
+    setUserDropdownVisible(false)
+    setChatHistoryVisible(true)
   }
 
   useEffect(() => {
@@ -184,11 +195,7 @@ const Navbar: React.FC = () => {
           {isLoggedIn ? (
             <>
               {currentLanguage ? (
-                <Dropdown
-                  trigger="click"
-                  position="bottomRight"
-                  menu={languageDropdownItems}
-                >
+                <Dropdown trigger="click" position="bottomRight" menu={languageDropdownItems}>
                   <span>
                     <Button
                       icon={<IconChevronDown />}
@@ -209,9 +216,22 @@ const Navbar: React.FC = () => {
               <Dropdown
                 trigger="click"
                 position="bottomRight"
+                visible={userDropdownVisible}
+                onVisibleChange={setUserDropdownVisible}
                 render={
                   <Dropdown.Menu>
-                    <Dropdown.Item onClick={handleLogout}>退出登录</Dropdown.Item>
+                    <Dropdown.Item onClick={handleOpenChatHistory}>
+                      <div className="flex items-center gap-2">
+                        <IconHistory />
+                        <span>聊天记录</span>
+                      </div>
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={handleLogout}>
+                      <div className="flex items-center gap-2">
+                        <IconReply />
+                        <span>退出登录</span>
+                      </div>
+                    </Dropdown.Item>
                   </Dropdown.Menu>
                 }
               >
@@ -266,6 +286,12 @@ const Navbar: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* 聊天记录侧边栏 */}
+      <ChatHistorySideSheet
+        visible={chatHistoryVisible}
+        onClose={() => setChatHistoryVisible(false)}
+      />
     </header>
   )
 }

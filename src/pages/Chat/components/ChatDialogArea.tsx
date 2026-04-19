@@ -1,5 +1,5 @@
 import React from 'react'
-import { AIChatDialogue } from '@douyinfe/semi-ui'
+import { AIChatDialogue, Spin } from '@douyinfe/semi-ui'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 
 interface ChatDialogAreaProps {
@@ -11,6 +11,7 @@ interface ChatDialogAreaProps {
   hintPrompts: string[]
   languageLabel: string
   onHintClick: (hint: string) => void
+  loading?: boolean
 }
 
 /**
@@ -22,7 +23,16 @@ export const ChatDialogArea: React.FC<ChatDialogAreaProps> = ({
   hintPrompts,
   languageLabel,
   onHintClick,
+  loading,
 }) => {
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Spin size="large" tip="加载中..." />
+      </div>
+    )
+  }
+
   return (
     <>
       {chats.length === 0 && (

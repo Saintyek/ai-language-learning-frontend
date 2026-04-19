@@ -1,13 +1,17 @@
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/interface'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
-import { streamChatMessage, type ChatMessagePayload } from '@/api/chat'
+import { streamChatMessage, createChatSession, type ChatMessagePayload } from '@/api/chat'
 import { languageOptions } from '@/consts/languages'
 
 interface ChatHookProps {
   langCode: string | undefined
   /** 场景值数组，如 ['role', '扮演老师'] */
   sceneValue?: string[]
+  /** 初始会话ID（用于加载历史会话） */
+  initialSessionId?: string | null
+  /** 初始消息列表（用于加载历史消息） */
+  initialMessages?: AIChatMessage[]
 }
 
 export interface UseChatReturn {
@@ -28,6 +32,7 @@ export interface UseChatReturn {
     user: { name: string; color: string }
     assistant: { name: string; color: string }
   }
+  sessionId: string | null
 }
 
 const buildChatMessage = ({
@@ -48,19 +53,46 @@ const buildChatMessage = ({
   status,
 })
 
-export default function useChat({ langCode, sceneValue }: ChatHookProps): UseChatReturn {
-  const [chats, setChats] = useState<AIChatMessage[]>([])
+export default function useChat({
+  langCode,
+  sceneValue,
+  initialSessionId,
+  initialMessages,
+}: ChatHookProps): UseChatReturn {
+  const [chats, setChats] = useState<AIChatMessage[]>(initialMessages ?? [])
   const [generating, setGenerating] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
   const messageIdSeedRef = useRef(0)
+  const sessionIdRef = useRef<string | null>(initialSessionId ?? null)
+  const prevLangCodeRef = useRef<string | undefined>(langCode)
+
+  // 当 initialSessionId 或 initialMessages 变化时，重置会话状态
+  useEffect(() => {
+    sessionIdRef.current = initialSessionId ?? null
+    setChats(initialMessages ?? [])
+    prevLangCodeRef.current = langCode
+  }, [initialSessionId, initialMessages])
+
+  // 当用户主动切换语言时（不是从历史会话加载），重置会话
+  useEffect(() => {
+    if (
+      prevLangCodeRef.current !== undefined &&
+      prevLangCodeRef.current !== langCode &&
+      !initialSessionId
+    ) {
+      // 语言切换，重置会话
+      sessionIdRef.current = null
+      setChats([])
+    }
+    prevLangCodeRef.current = langCode
+  }, [langCode, initialSessionId])
 
   const currentLanguage = languageOptions.find(lang => lang.code === langCode)
   const languageLabel = currentLanguage?.label || '语言'
 
   // 构建场景标识，格式为 "一级场景/二级场景"
-  const scenarioKey = sceneValue && sceneValue.length >= 2
-    ? `${sceneValue[0]}/${sceneValue[1]}`
-    : undefined
+  const scenarioKey =
+    sceneValue && sceneValue.length >= 2 ? `${sceneValue[0]}/${sceneValue[1]}` : undefined
 
   const extractPlainText = useCallback((inputContents?: Content[]): string => {
     if (!inputContents?.length) return ''
@@ -172,11 +204,25 @@ export default function useChat({ langCode, sceneValue }: ChatHookProps): UseCha
       ])
 
       try {
+        // 首次对话时创建会话
+        if (!sessionIdRef.current) {
+          try {
+            // 使用用户消息作为会话标题（截取前50个字符）
+            const title = trimmedText
+            const sessionResponse = await createChatSession(title, scenarioKey, langCode)
+            sessionIdRef.current = String(sessionResponse.data.id)
+          } catch (error) {
+            console.error('Failed to create session:', error)
+            // 创建会话失败不影响主流程，继续聊天但不保存
+          }
+        }
+
         await streamChatMessage({
           messages,
           signal: abortController.signal,
           scenario: scenarioKey,
           language: langCode,
+          sessionId: sessionIdRef.current ?? undefined,
           onChunk: chunk => {
             setChats(prev =>
               prev.map(chat =>
@@ -255,5 +301,6 @@ export default function useChat({ langCode, sceneValue }: ChatHookProps): UseCha
     languageLabel,
     hintPrompts,
     roleConfig,
+    sessionId: sessionIdRef.current,
   }
 }

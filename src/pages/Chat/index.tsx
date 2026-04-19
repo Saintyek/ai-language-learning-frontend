@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import 'flag-icons/css/flag-icons.min.css'
 
 import useChat from './hooks/useChat'
@@ -8,15 +8,57 @@ import useDigitalHuman from './hooks/useDigitalHuman'
 import DigitalHumanPanel from './components/DigitalHumanPanel'
 import ChatDialogArea from './components/ChatDialogArea'
 import ChatInputArea from './components/ChatInputArea'
+import { getChatSessionDetail, type ChatMessage } from '@/api/chat'
+import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 
 const Chat: React.FC = () => {
   const { langCode } = useParams<{ langCode: string }>()
+  const [searchParams] = useSearchParams()
+  const sessionId = searchParams.get('sessionId')
   const [sceneDropdownVisible, setSceneDropdownVisible] = useState(false)
+  const [initialMessages, setInitialMessages] = useState<AIChatMessage[] | undefined>()
+  const [loadingSession, setLoadingSession] = useState(false)
   const chatPanelRef = useRef<HTMLDivElement>(null)
+
+  // 加载会话历史
+  const loadSessionHistory = useCallback(async (sid: string) => {
+    setLoadingSession(true)
+    try {
+      const response = await getChatSessionDetail(sid)
+      if (response.data?.messages) {
+        const messages: AIChatMessage[] = response.data.messages.map((msg: ChatMessage) => ({
+          id: `loaded-${msg.id}`,
+          role: msg.role,
+          content: msg.content,
+          createdAt: new Date(msg.createdAt).getTime(),
+          status: 'completed' as const,
+        }))
+        setInitialMessages(messages)
+      }
+    } catch (error) {
+      console.error('Failed to load session history:', error)
+    } finally {
+      setLoadingSession(false)
+    }
+  }, [])
+
+  // 如果有 sessionId，加载会话历史
+  useEffect(() => {
+    if (sessionId) {
+      loadSessionHistory(sessionId)
+    } else {
+      setInitialMessages(undefined)
+    }
+  }, [sessionId, loadSessionHistory])
 
   // 使用自定义 Hooks
   const sceneSelection = useSceneSelection()
-  const chat = useChat({ langCode, sceneValue: sceneSelection.sceneValue })
+  const chat = useChat({
+    langCode,
+    sceneValue: sceneSelection.sceneValue,
+    initialSessionId: sessionId,
+    initialMessages,
+  })
   const { digitalHuman } = useDigitalHuman()
 
   // 自动滚动到底部
@@ -52,6 +94,7 @@ const Chat: React.FC = () => {
               hintPrompts={chat.hintPrompts}
               languageLabel={chat.languageLabel}
               onHintClick={chat.handleSubmitText}
+              loading={loadingSession}
             />
 
             <ChatInputArea

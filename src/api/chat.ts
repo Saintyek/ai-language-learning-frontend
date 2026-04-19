@@ -12,6 +12,8 @@ export interface StreamChatParams {
   scenario?: string
   /** 目标学习语言：cn-中文, jp-日文, kr-韩语, us-美式英语 */
   language?: string
+  /** 会话ID，如果传了则会保存消息到该会话 */
+  sessionId?: string
 }
 
 interface StreamEventPayload {
@@ -38,7 +40,7 @@ const getAuthHeaders = () => {
   return headers
 }
 
-const getApiBaseUrl = () => (import.meta.env.PROD ? import.meta.env.VITE_API_BASE_URL ?? '' : '')
+const getApiBaseUrl = () => (import.meta.env.PROD ? (import.meta.env.VITE_API_BASE_URL ?? '') : '')
 
 const parseEventData = (value: string): StreamEventPayload | null => {
   const trimmedValue = value.trim()
@@ -64,7 +66,7 @@ const getErrorMessage = (payload: StreamEventPayload | null) => {
 
 const processSSEBuffer = (
   buffer: string,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: string) => void
 ): { remainingBuffer: string; done: boolean; errorMessage?: string } => {
   const events = buffer.split(/\r?\n\r?\n/)
   const remainingBuffer = events.pop() ?? ''
@@ -106,7 +108,12 @@ const processSSEBuffer = (
       }
     }
 
-    if (eventName === 'done' || payloadType === 'done' || payloadType === 'complete' || payload?.done) {
+    if (
+      eventName === 'done' ||
+      payloadType === 'done' ||
+      payloadType === 'complete' ||
+      payload?.done
+    ) {
       return { remainingBuffer, done: true }
     }
 
@@ -125,7 +132,7 @@ const processSSEBuffer = (
 
 const processNDJSONBuffer = (
   buffer: string,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: string) => void
 ): { remainingBuffer: string; done: boolean; errorMessage?: string } => {
   const lines = buffer.split(/\n/)
   const remainingBuffer = lines.pop() ?? ''
@@ -180,17 +187,158 @@ const parseErrorResponse = async (response: Response) => {
   return `请求失败，错误码: ${response.status}`
 }
 
+// 聊天会话相关类型
+export interface ChatSession {
+  id: string
+  userId: number
+  title: string
+  scenario: string | null
+  language: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GetSessionsResponse {
+  message: string
+  data: ChatSession[]
+  meta: {
+    total: number
+    page: number
+    limit: number
+  }
+}
+
+export interface GetSessionDetailResponse {
+  message: string
+  data: (ChatSession & { messages: ChatMessage[] }) | null
+}
+
+export interface ChatMessage {
+  id: number
+  sessionId: string
+  role: 'user' | 'assistant'
+  content: string
+  createdAt: string
+}
+
+// 获取聊天会话列表
+export const getChatSessions = async (
+  page: number = 1,
+  limit: number = 20
+): Promise<GetSessionsResponse> => {
+  const response = await fetch(`${getApiBaseUrl()}/api/chat/sessions?page=${page}&limit=${limit}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('authExpiry')
+    window.location.href = '/?auth=required'
+    throw new Error('未授权，请重新登录')
+  }
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response))
+  }
+
+  return response.json()
+}
+
+// 获取会话详情
+export const getChatSessionDetail = async (
+  sessionId: string
+): Promise<GetSessionDetailResponse> => {
+  const response = await fetch(`${getApiBaseUrl()}/api/chat/sessions/${sessionId}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('authExpiry')
+    window.location.href = '/?auth=required'
+    throw new Error('未授权，请重新登录')
+  }
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response))
+  }
+
+  return response.json()
+}
+
+// 删除会话
+export const deleteChatSession = async (sessionId: string): Promise<void> => {
+  const response = await fetch(`${getApiBaseUrl()}/api/chat/sessions/${sessionId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  })
+
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('authExpiry')
+    window.location.href = '/?auth=required'
+    throw new Error('未授权，请重新登录')
+  }
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response))
+  }
+}
+
+// 创建会话响应类型
+export interface CreateSessionResponse {
+  message: string
+  data: ChatSession
+}
+
+// 创建新会话
+export const createChatSession = async (
+  title?: string,
+  scenario?: string,
+  language?: string
+): Promise<CreateSessionResponse> => {
+  const response = await fetch(`${getApiBaseUrl()}/api/chat/sessions`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ title, scenario, language }),
+  })
+
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('authExpiry')
+    window.location.href = '/?auth=required'
+    throw new Error('未授权，请重新登录')
+  }
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response))
+  }
+
+  return response.json()
+}
+
 export const streamChatMessage = async ({
   messages,
   signal,
   onChunk,
   scenario,
   language,
+  sessionId,
 }: StreamChatParams): Promise<void> => {
   const response = await fetch(`${getApiBaseUrl()}/api/chat/messages/stream`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ messages, scenario, language }),
+    body: JSON.stringify({ messages, scenario, language, sessionId }),
     signal,
   })
 
@@ -214,7 +362,9 @@ export const streamChatMessage = async ({
   const contentType = response.headers.get('content-type') ?? ''
   const reader = response.body.getReader()
   const decoder = new TextDecoder('utf-8')
-  const processBuffer = contentType.includes('text/event-stream') ? processSSEBuffer : processNDJSONBuffer
+  const processBuffer = contentType.includes('text/event-stream')
+    ? processSSEBuffer
+    : processNDJSONBuffer
 
   let buffer = ''
 

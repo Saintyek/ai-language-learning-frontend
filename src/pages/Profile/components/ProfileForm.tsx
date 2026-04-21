@@ -121,7 +121,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ language, languageLabel, onSu
         <h3 className="text-lg font-semibold text-gray-800 mb-3">
           每日学习时间 <span className="text-red-500">*</span>
         </h3>
-        <TagSelector type="dailyTime" value={dailyTime} onChange={value => setDailyTime(value as DailyTime[])} />
+        <TagSelector
+          type="dailyTime"
+          value={dailyTime}
+          onChange={value => setDailyTime(value as DailyTime[])}
+        />
       </div>
 
       {/* Submit Button */}

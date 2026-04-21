@@ -105,7 +105,7 @@ const Chat: React.FC = () => {
   // Show loading state while checking profile
   if (checkingProfile) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     )

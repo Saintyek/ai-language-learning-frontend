@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Button, Dropdown } from '@douyinfe/semi-ui'
-import { IconChevronDown, IconHistory, IconReply, IconUser } from '@douyinfe/semi-icons'
+import { IconChevronDown, IconHistory, IconReply, IconArrowLeft } from '@douyinfe/semi-icons'
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { getUserInfo, isAuthenticated, clearAuthData } from '@/api/auth'
 import { languageOptions } from '@/consts/languages'
+import { getProfile } from '@/api/profile'
 import ChatHistorySideSheet from '@/components/ChatHistory/ChatHistorySideSheet'
+import { NoProfileModal, UnsavedChangesModal } from '@/components/ProfileModals'
 import 'flag-icons/css/flag-icons.min.css'
 
 const Navbar: React.FC = () => {
@@ -15,7 +17,39 @@ const Navbar: React.FC = () => {
   const [chatHistoryVisible, setChatHistoryVisible] = useState(false)
   const [userDropdownVisible, setUserDropdownVisible] = useState(false)
 
-  // 检查登录状态
+  // Profile 页面相关状态
+  const [noProfileModalVisible, setNoProfileModalVisible] = useState(false)
+  const [unsavedChangesModalVisible, setUnsavedChangesModalVisible] = useState(false)
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null)
+
+  // 检测当前页面类型
+  const isHomePage = location.pathname === '/'
+  const chatRouteMatch = matchPath('/:langCode/chat', location.pathname)
+  const profileRouteMatch = matchPath('/:langCode/profile', location.pathname)
+
+  // 当前语言（聊天页面或档案页面）
+  const currentLanguage = languageOptions.find(
+    lang =>
+      lang.code === chatRouteMatch?.params.langCode ||
+      lang.code === profileRouteMatch?.params.langCode
+  )
+
+  // 档案页面时检查是否有档案
+  useEffect(() => {
+    if (profileRouteMatch && currentLanguage) {
+      const checkProfile = async () => {
+        try {
+          const response = await getProfile(currentLanguage.code)
+          setHasProfile(response.data !== null)
+        } catch {
+          setHasProfile(false)
+        }
+      }
+      checkProfile()
+    } else {
+      setHasProfile(null)
+    }
+  }, [profileRouteMatch, currentLanguage])
   useEffect(() => {
     const checkAuth = () => {
       const loggedIn = isAuthenticated()
@@ -51,25 +85,30 @@ const Navbar: React.FC = () => {
 
   const [activeKey, setActiveKey] = useState('')
 
-  const isHomePage = location.pathname === '/'
-  const chatRouteMatch = matchPath('/:langCode/chat', location.pathname)
-  const currentLanguage = languageOptions.find(
-    lang => lang.code === chatRouteMatch?.params.langCode
-  )
+  // 语言下拉框选项 - 根据当前页面类型决定跳转目标
+  const languageDropdownItems = languageOptions
+    .filter(lang => lang.code !== currentLanguage?.code)
+    .map(lang => ({
+      node: 'item' as const,
+      name: lang.label,
+      onClick: () => {
+        // Profile 页面时跳转到对应语言的档案页面，否则跳转到聊天页面
+        if (profileRouteMatch) {
+          navigate(`/${lang.code}/profile`)
+        } else {
+          navigate(`/${lang.code}/chat`)
+        }
+      },
+      icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
+    }))
+
+  // 首页开始练习下拉框选项
   const practiceDropdownItems = languageOptions.map(lang => ({
     node: 'item' as const,
     name: lang.label,
     onClick: () => navigate(`/${lang.code}/chat`),
     icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
   }))
-  const languageDropdownItems = languageOptions
-    .filter(lang => lang.code !== currentLanguage?.code)
-    .map(lang => ({
-      node: 'item' as const,
-      name: lang.label,
-      onClick: () => navigate(`/${lang.code}/chat`),
-      icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
-    }))
 
   // 退出登录
   const handleLogout = () => {
@@ -87,12 +126,37 @@ const Navbar: React.FC = () => {
     setChatHistoryVisible(true)
   }
 
-  // 跳转到个人档案页面
-  const handleOpenProfile = () => {
+  // 返回学习（替代原来的个人档案）
+  const handleReturnToLearning = () => {
     setUserDropdownVisible(false)
-    // 如果在聊天页面，跳转到当前语言的档案页面，否则跳转到英语档案页面
-    const targetLang = currentLanguage?.code || 'us'
-    navigate(`/${targetLang}/profile`)
+    // 根据是否有档案显示不同模态框
+    if (hasProfile === false) {
+      setNoProfileModalVisible(true)
+    } else {
+      setUnsavedChangesModalVisible(true)
+    }
+  }
+
+  // 从档案页面跳过设置，直接进入聊天
+  const handleSkipProfile = () => {
+    setNoProfileModalVisible(false)
+    if (currentLanguage) {
+      navigate(`/${currentLanguage.code}/chat`)
+    }
+  }
+
+  // 从档案页面返回之前的聊天页面
+  const handleReturnToChat = () => {
+    setUnsavedChangesModalVisible(false)
+    if (currentLanguage) {
+      // 检查是否有来源页面信息
+      const fromPath = location.state?.from
+      if (fromPath) {
+        navigate(fromPath)
+      } else {
+        navigate(`/${currentLanguage.code}/chat`)
+      }
+    }
   }
 
   useEffect(() => {
@@ -228,12 +292,27 @@ const Navbar: React.FC = () => {
                 onVisibleChange={setUserDropdownVisible}
                 render={
                   <Dropdown.Menu>
-                    <Dropdown.Item onClick={handleOpenProfile}>
-                      <div className="flex items-center gap-2">
-                        <IconUser />
-                        <span>个人档案</span>
-                      </div>
-                    </Dropdown.Item>
+                    {profileRouteMatch ? (
+                      <Dropdown.Item onClick={handleReturnToLearning}>
+                        <div className="flex items-center gap-2">
+                          <IconArrowLeft />
+                          <span>返回学习</span>
+                        </div>
+                      </Dropdown.Item>
+                    ) : (
+                      <Dropdown.Item
+                        onClick={() => {
+                          setUserDropdownVisible(false)
+                          const targetLang = currentLanguage?.code || 'us'
+                          navigate(`/${targetLang}/profile`, { state: { from: location.pathname } })
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <IconHistory />
+                          <span>个人档案</span>
+                        </div>
+                      </Dropdown.Item>
+                    )}
                     <Dropdown.Item onClick={handleOpenChatHistory}>
                       <div className="flex items-center gap-2">
                         <IconHistory />
@@ -305,6 +384,20 @@ const Navbar: React.FC = () => {
       <ChatHistorySideSheet
         visible={chatHistoryVisible}
         onClose={() => setChatHistoryVisible(false)}
+      />
+
+      {/* Profile 页面相关模态框 */}
+      <NoProfileModal
+        visible={noProfileModalVisible}
+        languageLabel={currentLanguage?.label || ''}
+        onSkip={handleSkipProfile}
+        onReturn={() => setNoProfileModalVisible(false)}
+      />
+
+      <UnsavedChangesModal
+        visible={unsavedChangesModalVisible}
+        onConfirm={handleReturnToChat}
+        onCancel={() => setUnsavedChangesModalVisible(false)}
       />
     </header>
   )

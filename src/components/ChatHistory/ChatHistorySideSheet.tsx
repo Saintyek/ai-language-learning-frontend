@@ -112,7 +112,7 @@ const ChatHistorySideSheet: React.FC<ChatHistorySideSheetProps> = ({ visible, on
                       {formatDate(item.updatedAt)}
                     </Typography.Text>
                     <button
-                      className="p-1 hover:bg-gray-200 rounded transition-colors"
+                      className="p-1 hover:bg-gray-200 rounded transition-colors cursor-pointer"
                       onClick={e => handleDelete(item.id, e)}
                       title="删除"
                     >

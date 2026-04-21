@@ -66,7 +66,7 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   )
 
   return (
-    <div className="chat-shell__composer-wrap flex-shrink-0 px-3 pb-3 pt-2">
+    <div className="chat-shell__composer-wrap shrink-0 px-3 pb-3 pt-2">
       <AIChatInput
         keepSkillAfterSend={false}
         placeholder={`用${languageLabel}开始对话...`}

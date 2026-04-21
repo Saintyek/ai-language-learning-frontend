@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Button, Dropdown } from '@douyinfe/semi-ui'
-import { IconChevronDown, IconHistory, IconReply } from '@douyinfe/semi-icons'
+import { IconChevronDown, IconHistory, IconReply, IconUser } from '@douyinfe/semi-icons'
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { getUserInfo, isAuthenticated, clearAuthData } from '@/api/auth'
 import { languageOptions } from '@/consts/languages'
@@ -85,6 +85,14 @@ const Navbar: React.FC = () => {
   const handleOpenChatHistory = () => {
     setUserDropdownVisible(false)
     setChatHistoryVisible(true)
+  }
+
+  // 跳转到个人档案页面
+  const handleOpenProfile = () => {
+    setUserDropdownVisible(false)
+    // 如果在聊天页面，跳转到当前语言的档案页面，否则跳转到英语档案页面
+    const targetLang = currentLanguage?.code || 'us'
+    navigate(`/${targetLang}/profile`)
   }
 
   useEffect(() => {
@@ -220,6 +228,12 @@ const Navbar: React.FC = () => {
                 onVisibleChange={setUserDropdownVisible}
                 render={
                   <Dropdown.Menu>
+                    <Dropdown.Item onClick={handleOpenProfile}>
+                      <div className="flex items-center gap-2">
+                        <IconUser />
+                        <span>个人档案</span>
+                      </div>
+                    </Dropdown.Item>
                     <Dropdown.Item onClick={handleOpenChatHistory}>
                       <div className="flex items-center gap-2">
                         <IconHistory />

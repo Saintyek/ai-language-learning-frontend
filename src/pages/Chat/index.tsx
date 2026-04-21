@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import 'flag-icons/css/flag-icons.min.css'
 
 import useChat from './hooks/useChat'
@@ -9,16 +9,46 @@ import DigitalHumanPanel from './components/DigitalHumanPanel'
 import ChatDialogArea from './components/ChatDialogArea'
 import ChatInputArea from './components/ChatInputArea'
 import { getChatSessionDetail, type ChatMessage } from '@/api/chat'
+import { getProfile } from '@/api/profile'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 
 const Chat: React.FC = () => {
   const { langCode } = useParams<{ langCode: string }>()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const sessionId = searchParams.get('sessionId')
   const [sceneDropdownVisible, setSceneDropdownVisible] = useState(false)
   const [initialMessages, setInitialMessages] = useState<AIChatMessage[] | undefined>()
   const [loadingSession, setLoadingSession] = useState(false)
+  const [checkingProfile, setCheckingProfile] = useState(true)
   const chatPanelRef = useRef<HTMLDivElement>(null)
+
+  // Check if user has profile for this language (first visit check)
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (!langCode) return
+
+      // Skip profile check if loading existing session
+      if (sessionId) {
+        setCheckingProfile(false)
+        return
+      }
+
+      try {
+        const response = await getProfile(langCode)
+        if (!response.data) {
+          // No profile exists, redirect to profile page
+          navigate(`/${langCode}/profile`)
+          return
+        }
+      } catch (error) {
+        console.error('Failed to check profile:', error)
+      } finally {
+        setCheckingProfile(false)
+      }
+    }
+    checkProfile()
+  }, [langCode, sessionId, navigate])
 
   // 加载会话历史
   const loadSessionHistory = useCallback(async (sid: string) => {
@@ -72,8 +102,17 @@ const Chat: React.FC = () => {
     scrollContainer.scrollTop = scrollContainer.scrollHeight
   }, [chat.chats])
 
+  // Show loading state while checking profile
+  if (checkingProfile) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="h-screen flex flex-col bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧数字人 */}
         <DigitalHumanPanel
@@ -86,7 +125,7 @@ const Chat: React.FC = () => {
         <div className="flex-1 overflow-hidden bg-white/45 p-4">
           <div
             ref={chatPanelRef}
-            className="chat-shell flex h-full w-full flex-col overflow-hidden rounded-[32px] border border-white/65 bg-white/78 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+            className="chat-shell flex h-full w-full flex-col overflow-hidden rounded-4xl border border-white/65 bg-white/78 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
           >
             <ChatDialogArea
               chats={chat.chats}

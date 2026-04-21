@@ -3,6 +3,7 @@ import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Chat from '@/pages/Chat'
+import Profile from '@/pages/Profile'
 import RequireAuth from '@/routes/RequireAuth'
 
 const routes: RouteObject[] = [
@@ -23,6 +24,14 @@ const routes: RouteObject[] = [
     element: (
       <RequireAuth>
         <Chat />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/:langCode/profile',
+    element: (
+      <RequireAuth>
+        <Profile />
       </RequireAuth>
     ),
   },

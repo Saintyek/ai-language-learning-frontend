@@ -21,6 +21,7 @@ dist-ssr
 .trae
 .ttadk
 .claude
+.superpowers
 *.suo
 *.ntvs*
 *.njsproj

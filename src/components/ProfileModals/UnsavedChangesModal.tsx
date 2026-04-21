@@ -39,12 +39,8 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
       width={400}
     >
       <div className="py-4">
-        <p className="text-gray-600">
-          返回后，您当前修改的学习档案将不会保存。
-        </p>
-        <p className="text-gray-600 mt-2">
-          确定要返回吗？
-        </p>
+        <p className="text-gray-600">返回后，您当前修改的学习档案将不会保存。</p>
+        <p className="text-gray-600 mt-2">确定要返回吗？</p>
       </div>
     </Modal>
   )

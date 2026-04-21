@@ -42,11 +42,10 @@ const NoProfileModal: React.FC<NoProfileModalProps> = ({
     >
       <div className="py-4">
         <p className="text-gray-600">
-          您还没有设置 <span className="font-medium text-gray-800">{languageLabel}</span> 的学习档案。
+          您还没有设置 <span className="font-medium text-gray-800">{languageLabel}</span>{' '}
+          的学习档案。
         </p>
-        <p className="text-gray-600 mt-2">
-          是否跳过档案设置，直接开始对话？
-        </p>
+        <p className="text-gray-600 mt-2">是否跳过档案设置，直接开始对话？</p>
       </div>
     </Modal>
   )

@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Button, Dropdown } from '@douyinfe/semi-ui'
-import { IconChevronDown, IconHistory, IconReply, IconArrowLeft } from '@douyinfe/semi-icons'
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconHistory,
+  IconReply,
+  IconBackward,
+  IconUser,
+} from '@douyinfe/semi-icons'
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { getUserInfo, isAuthenticated, clearAuthData } from '@/api/auth'
 import { languageOptions } from '@/consts/languages'
 import { getProfile } from '@/api/profile'
 import ChatHistorySideSheet from '@/components/ChatHistory/ChatHistorySideSheet'
-import { NoProfileModal, UnsavedChangesModal } from '@/components/ProfileModals'
+import NoProfileModal from '@/components/ProfileModals/NoProfileModal'
+import UnsavedChangesModal from '@/components/ProfileModals/UnsavedChangesModal'
 import 'flag-icons/css/flag-icons.min.css'
 
 const Navbar: React.FC = () => {
@@ -16,6 +24,11 @@ const Navbar: React.FC = () => {
   const [username, setUsername] = useState('')
   const [chatHistoryVisible, setChatHistoryVisible] = useState(false)
   const [userDropdownVisible, setUserDropdownVisible] = useState(false)
+
+  // 语言下拉框状态
+  const [languageDropdownVisible, setLanguageDropdownVisible] = useState(false)
+  // 首页"开始练习"下拉框状态
+  const [practiceDropdownVisible, setPracticeDropdownVisible] = useState(false)
 
   // Profile 页面相关状态
   const [noProfileModalVisible, setNoProfileModalVisible] = useState(false)
@@ -161,7 +174,12 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // 只在首页时监听滚动
+      // 滚动时收起所有下拉框
+      setLanguageDropdownVisible(false)
+      setUserDropdownVisible(false)
+      setPracticeDropdownVisible(false)
+
+      // 只在首页时监听滚动更新菜单高亮
       if (location.pathname === '/') {
         const scrollPosition = window.scrollY + 100
 
@@ -251,10 +269,16 @@ const Navbar: React.FC = () => {
         {/* 登录/注册按钮 */}
         <div className="hidden md:flex items-center space-x-3">
           {isHomePage ? (
-            <Dropdown trigger="click" position="bottomRight" menu={practiceDropdownItems}>
+            <Dropdown
+              trigger="click"
+              position="bottomRight"
+              visible={practiceDropdownVisible}
+              onVisibleChange={visible => setPracticeDropdownVisible(visible)}
+              menu={practiceDropdownItems}
+            >
               <span>
                 <Button
-                  icon={<IconChevronDown />}
+                  icon={practiceDropdownVisible ? <IconChevronUp /> : <IconChevronDown />}
                   iconPosition="right"
                   theme="borderless"
                   style={{ fontSize: '14px' }}
@@ -267,10 +291,16 @@ const Navbar: React.FC = () => {
           {isLoggedIn ? (
             <>
               {currentLanguage ? (
-                <Dropdown trigger="click" position="bottomRight" menu={languageDropdownItems}>
+                <Dropdown
+                  trigger="click"
+                  position="bottom"
+                  visible={languageDropdownVisible}
+                  onVisibleChange={visible => setLanguageDropdownVisible(visible)}
+                  menu={languageDropdownItems}
+                >
                   <span>
                     <Button
-                      icon={<IconChevronDown />}
+                      icon={languageDropdownVisible ? <IconChevronUp /> : <IconChevronDown />}
                       iconPosition="right"
                       theme="borderless"
                       style={{ fontSize: '14px' }}
@@ -289,13 +319,13 @@ const Navbar: React.FC = () => {
                 trigger="click"
                 position="bottomRight"
                 visible={userDropdownVisible}
-                onVisibleChange={setUserDropdownVisible}
+                onVisibleChange={visible => setUserDropdownVisible(visible)}
                 render={
                   <Dropdown.Menu>
                     {profileRouteMatch ? (
                       <Dropdown.Item onClick={handleReturnToLearning}>
                         <div className="flex items-center gap-2">
-                          <IconArrowLeft />
+                          <IconBackward />
                           <span>返回学习</span>
                         </div>
                       </Dropdown.Item>
@@ -308,8 +338,8 @@ const Navbar: React.FC = () => {
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          <IconHistory />
-                          <span>个人档案</span>
+                          <IconUser />
+                          <span>学习档案</span>
                         </div>
                       </Dropdown.Item>
                     )}
@@ -330,7 +360,7 @@ const Navbar: React.FC = () => {
               >
                 <span>
                   <Button
-                    icon={<IconChevronDown />}
+                    icon={userDropdownVisible ? <IconChevronUp /> : <IconChevronDown />}
                     iconPosition="right"
                     theme="borderless"
                     style={{ fontSize: '14px' }}

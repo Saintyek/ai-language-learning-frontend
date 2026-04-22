@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Toast } from '@douyinfe/semi-ui'
 import { BrowserRouter as Router, matchPath, useLocation, useNavigate } from 'react-router-dom'
-import Navbar from './components/Navbar'
+import Navbar from './components/Navbar/index.tsx'
 import AppRoutes from './routes/Routes'
 import Footer from './components/Footer'
 

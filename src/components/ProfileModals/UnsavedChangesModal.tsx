@@ -1,5 +1,7 @@
 import React from 'react'
-import { Modal } from '@douyinfe/semi-ui'
+import { Modal, Button, Typography } from '@douyinfe/semi-ui'
+
+const { Text } = Typography
 
 interface UnsavedChangesModalProps {
   visible: boolean
@@ -21,26 +23,18 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
       visible={visible}
       onCancel={onCancel}
       footer={
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            取消
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
+        <>
+          <Button onClick={onCancel}>取消</Button>
+          <Button theme="solid" type="primary" onClick={onConfirm}>
             确定
-          </button>
-        </div>
+          </Button>
+        </>
       }
       width={400}
     >
-      <div className="py-4">
-        <p className="text-gray-600">返回后，您当前修改的学习档案将不会保存。</p>
-        <p className="text-gray-600 mt-2">确定要返回吗？</p>
+      <div style={{ padding: '16px 0' }}>
+        <Text>返回后，您当前修改的学习档案将不会保存。</Text>
+        <Text style={{ display: 'block', marginTop: 8 }}>确定要返回到聊天吗？</Text>
       </div>
     </Modal>
   )

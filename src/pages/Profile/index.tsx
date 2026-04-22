@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ProfileForm from './components/ProfileForm'
 import { languageOptions } from '@/consts/languages'
@@ -7,6 +7,11 @@ import 'flag-icons/css/flag-icons.min.css'
 const Profile: React.FC = () => {
   const { langCode } = useParams<{ langCode: string }>()
   const navigate = useNavigate()
+
+  // 进入页面时始终保持在顶部
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [])
 
   const currentLanguage = languageOptions.find(lang => lang.code === langCode)
 

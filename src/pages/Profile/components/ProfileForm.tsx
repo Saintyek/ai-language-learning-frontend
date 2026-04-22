@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Toast } from '@douyinfe/semi-ui'
+import { Button, Toast, Typography, Spin } from '@douyinfe/semi-ui'
 import LevelSelector from './LevelSelector'
 import TagSelector from './TagSelector'
 import {
@@ -11,6 +11,8 @@ import {
   type DailyTime,
   type LanguageProfile,
 } from '@/api/profile'
+
+const { Title, Text } = Typography
 
 interface ProfileFormProps {
   language: string
@@ -38,6 +40,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ language, languageLabel, onSu
           setMotivations(profile.motivations)
           setGoals(profile.goals)
           setDailyTime([profile.dailyTime])
+        } else {
+          // Reset to default values when no profile exists for this language
+          setLevel('beginner')
+          setMotivations([])
+          setGoals([])
+          setDailyTime(['30min'])
         }
       } catch (error) {
         console.error('Failed to load profile:', error)
@@ -82,25 +90,27 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ language, languageLabel, onSu
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
+        <Spin size="large" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {/* Language Level */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">你的{languageLabel}水平</h3>
+        <Title heading={5} style={{ marginBottom: 12 }}>
+          你的{languageLabel}水平
+        </Title>
         <LevelSelector value={level} onChange={setLevel} />
       </div>
 
       {/* Learning Motivation */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
-          学习动机 <span className="text-red-500">*</span>
-        </h3>
+        <Title heading={5} style={{ marginBottom: 12 }}>
+          学习动机 <Text type="danger">*</Text>
+        </Title>
         <TagSelector
           type="motivation"
           value={motivations}
@@ -110,17 +120,17 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ language, languageLabel, onSu
 
       {/* Learning Goals */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
-          学习目标 <span className="text-red-500">*</span>
-        </h3>
+        <Title heading={5} style={{ marginBottom: 12 }}>
+          学习目标 <Text type="danger">*</Text>
+        </Title>
         <TagSelector type="goal" value={goals} onChange={value => setGoals(value as Goal[])} />
       </div>
 
       {/* Daily Study Time */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
-          每日学习时间 <span className="text-red-500">*</span>
-        </h3>
+        <Title heading={5} style={{ marginBottom: 12 }}>
+          每日学习时间 <Text type="danger">*</Text>
+        </Title>
         <TagSelector
           type="dailyTime"
           value={dailyTime}
@@ -129,7 +139,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ language, languageLabel, onSu
       </div>
 
       {/* Submit Button */}
-      <div className="pt-4">
+      <div style={{ paddingTop: 16 }}>
         <Button
           type="primary"
           theme="solid"
@@ -137,7 +147,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ language, languageLabel, onSu
           block
           loading={saving}
           onClick={handleSubmit}
-          style={{ height: '48px', fontSize: '16px' }}
+          style={{ height: 48, fontSize: 16 }}
         >
           保存并开始学习
         </Button>

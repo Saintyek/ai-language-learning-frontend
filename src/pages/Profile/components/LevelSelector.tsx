@@ -1,6 +1,8 @@
 import React from 'react'
-import { Radio, RadioGroup } from '@douyinfe/semi-ui'
+import { Radio, RadioGroup, Typography, Row, Col } from '@douyinfe/semi-ui'
 import type { LanguageLevel } from '@/api/profile'
+
+const { Text } = Typography
 
 interface LevelSelectorProps {
   value: LanguageLevel
@@ -22,16 +24,20 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ value, onChange }) => {
       onChange={e => onChange(e.target.value as LanguageLevel)}
       style={{ width: '100%' }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <Row gutter={[12, 12]}>
         {levelOptions.map(option => (
-          <Radio key={option.value} value={option.value}>
-            <div className="flex flex-col items-start py-2">
-              <span className="font-medium text-gray-800">{option.label}</span>
-              <span className="text-xs text-gray-500 mt-1">{option.description}</span>
-            </div>
-          </Radio>
+          <Col key={option.value} span={12}>
+            <Radio value={option.value}>
+              <div style={{ padding: '8px 0' }}>
+                <Text strong>{option.label}</Text>
+                <Text size="small" type="tertiary" style={{ display: 'block', marginTop: 4 }}>
+                  {option.description}
+                </Text>
+              </div>
+            </Radio>
+          </Col>
         ))}
-      </div>
+      </Row>
     </RadioGroup>
   )
 }

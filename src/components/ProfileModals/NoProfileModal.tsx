@@ -1,5 +1,7 @@
 import React from 'react'
-import { Modal } from '@douyinfe/semi-ui'
+import { Modal, Button, Typography } from '@douyinfe/semi-ui'
+
+const { Text } = Typography
 
 interface NoProfileModalProps {
   visible: boolean
@@ -23,29 +25,20 @@ const NoProfileModal: React.FC<NoProfileModalProps> = ({
       visible={visible}
       onCancel={onReturn}
       footer={
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onReturn}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            返回设置
-          </button>
-          <button
-            onClick={onSkip}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
+        <>
+          <Button onClick={onReturn}>返回设置</Button>
+          <Button theme="solid" type="primary" onClick={onSkip}>
             跳过
-          </button>
-        </div>
+          </Button>
+        </>
       }
       width={400}
     >
-      <div className="py-4">
-        <p className="text-gray-600">
-          您还没有设置 <span className="font-medium text-gray-800">{languageLabel}</span>{' '}
-          的学习档案。
-        </p>
-        <p className="text-gray-600 mt-2">是否跳过档案设置，直接开始对话？</p>
+      <div style={{ padding: '16px 0' }}>
+        <Text>
+          您还没有设置 <Text strong>{languageLabel}</Text> 的学习档案。
+        </Text>
+        <Text style={{ display: 'block', marginTop: 8 }}>是否跳过档案设置，直接开始对话？</Text>
       </div>
     </Modal>
   )

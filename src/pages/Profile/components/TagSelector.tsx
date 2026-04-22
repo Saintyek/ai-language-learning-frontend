@@ -1,5 +1,7 @@
 import React from 'react'
-import { Checkbox, CheckboxGroup } from '@douyinfe/semi-ui'
+import { Checkbox, CheckboxGroup, Radio, RadioGroup, Typography, Row, Col } from '@douyinfe/semi-ui'
+
+const { Text } = Typography
 
 interface TagSelectorProps {
   type: 'motivation' | 'goal' | 'dailyTime'
@@ -34,42 +36,50 @@ const dailyTimeOptions = [
 const TagSelector: React.FC<TagSelectorProps> = ({ type, value, onChange }) => {
   const options =
     type === 'motivation' ? motivationOptions : type === 'goal' ? goalOptions : dailyTimeOptions
-  const isSingle = type === 'dailyTime'
+  const dailyTimeSelector = type === 'dailyTime'
 
-  if (isSingle) {
+  if (dailyTimeSelector) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {options.map(option => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChange([option.value])}
-            className={`flex flex-col items-start p-3 rounded-lg border-2 transition-all ${
-              value.includes(option.value)
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <span className="font-medium text-gray-800">{option.label}</span>
-            <span className="text-xs text-gray-500 mt-1">{option.extra}</span>
-          </button>
-        ))}
-      </div>
+      <RadioGroup
+        type="button"
+        value={value[0]}
+        onChange={e => onChange([e.target.value])}
+        style={{ width: '100%' }}
+      >
+        <Row gutter={[12, 12]}>
+          {options.map(option => (
+            <Col key={option.value} span={6}>
+              <Radio value={option.value}>
+                <div style={{ padding: '4px 0' }}>
+                  <Text strong>{option.label}</Text>
+                  <Text size="small" type="tertiary" style={{ display: 'block', marginTop: 2 }}>
+                    {option.extra}
+                  </Text>
+                </div>
+              </Radio>
+            </Col>
+          ))}
+        </Row>
+      </RadioGroup>
     )
   }
 
   return (
     <CheckboxGroup value={value} onChange={onChange} style={{ width: '100%' }}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <Row gutter={[12, 12]}>
         {options.map(option => (
-          <Checkbox key={option.value} value={option.value}>
-            <div className="flex flex-col items-start py-1">
-              <span className="font-medium text-gray-800">{option.label}</span>
-              <span className="text-xs text-gray-500 mt-1">{option.extra}</span>
-            </div>
-          </Checkbox>
+          <Col key={option.value} span={12}>
+            <Checkbox value={option.value}>
+              <div>
+                <Text strong>{option.label}</Text>
+                <Text size="small" type="tertiary" style={{ display: 'block', marginTop: 2 }}>
+                  {option.extra}
+                </Text>
+              </div>
+            </Checkbox>
+          </Col>
         ))}
-      </div>
+      </Row>
     </CheckboxGroup>
   )
 }

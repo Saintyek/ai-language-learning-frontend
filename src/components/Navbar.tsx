@@ -14,6 +14,7 @@ import { languageOptions } from '@/consts/languages'
 import { getProfile } from '@/api/profile'
 import ChatHistorySideSheet from '@/components/ChatHistory/ChatHistorySideSheet'
 import NoProfileModal from '@/components/ProfileModals/NoProfileModal'
+import NoProfilePromptModal from '@/components/ProfileModals/FirstCreateProfileModal'
 import UnsavedChangesModal from '@/components/ProfileModals/UnsavedChangesModal'
 import 'flag-icons/css/flag-icons.min.css'
 
@@ -34,6 +35,10 @@ const Navbar: React.FC = () => {
   const [noProfileModalVisible, setNoProfileModalVisible] = useState(false)
   const [unsavedChangesModalVisible, setUnsavedChangesModalVisible] = useState(false)
   const [hasProfile, setHasProfile] = useState<boolean | null>(null)
+
+  // 语言选择时检查 profile 的状态
+  const [profilePromptModalVisible, setProfilePromptModalVisible] = useState(false)
+  const [selectedLanguage, setSelectedLanguage] = useState<(typeof languageOptions)[0] | null>(null)
 
   // 检测当前页面类型
   const isHomePage = location.pathname === '/'
@@ -105,11 +110,13 @@ const Navbar: React.FC = () => {
       node: 'item' as const,
       name: lang.label,
       onClick: () => {
-        // Profile 页面时跳转到对应语言的档案页面，否则跳转到聊天页面
+        // Profile 页面时跳转到对应语言的档案页面
         if (profileRouteMatch) {
+          setLanguageDropdownVisible(false)
           navigate(`/${lang.code}/profile`)
         } else {
-          navigate(`/${lang.code}/chat`)
+          // 其他页面时检查 profile 再决定是否跳转
+          handleLanguageSelect(lang)
         }
       },
       icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
@@ -119,7 +126,7 @@ const Navbar: React.FC = () => {
   const practiceDropdownItems = languageOptions.map(lang => ({
     node: 'item' as const,
     name: lang.label,
-    onClick: () => navigate(`/${lang.code}/chat`),
+    onClick: () => handleLanguageSelect(lang),
     icon: <span className={`fi fi-${lang.code} rounded-sm text-lg`} aria-hidden="true" />,
   }))
 
@@ -169,6 +176,45 @@ const Navbar: React.FC = () => {
       } else {
         navigate(`/${currentLanguage.code}/chat`)
       }
+    }
+  }
+
+  // 选择语言时检查是否有 profile，决定是否显示模态框
+  const handleLanguageSelect = async (lang: (typeof languageOptions)[0]) => {
+    // 关闭下拉框
+    setLanguageDropdownVisible(false)
+    setPracticeDropdownVisible(false)
+
+    try {
+      const response = await getProfile(lang.code)
+      if (!response.data) {
+        // 没有 profile，显示模态框
+        setSelectedLanguage(lang)
+        setProfilePromptModalVisible(true)
+      } else {
+        // 有 profile，直接跳转
+        navigate(`/${lang.code}/chat`)
+      }
+    } catch {
+      // 出错时也显示模态框
+      setSelectedLanguage(lang)
+      setProfilePromptModalVisible(true)
+    }
+  }
+
+  // 从语言选择模态框点击"去创建"
+  const handlePromptCreateProfile = () => {
+    setProfilePromptModalVisible(false)
+    if (selectedLanguage) {
+      navigate(`/${selectedLanguage.code}/profile`)
+    }
+  }
+
+  // 从语言选择模态框点击"跳过"
+  const handlePromptSkipProfile = () => {
+    setProfilePromptModalVisible(false)
+    if (selectedLanguage) {
+      navigate(`/${selectedLanguage.code}/chat`)
     }
   }
 
@@ -239,12 +285,13 @@ const Navbar: React.FC = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-20 bg-white shadow-sm">
-      <div className="container mx-auto h-full px-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold text-blue-600">
+      <div className="container mx-auto h-full px-4 relative flex justify-center items-center">
+        {/* 左侧：Logo - 绝对定位 */}
+        <Link to="/" className="absolute left-4 text-2xl font-bold text-blue-600">
           AI语言学习
         </Link>
 
-        {/* 桌面端导航 */}
+        {/* 中间：导航菜单 - 居中 */}
         <nav className="hidden md:flex space-x-8">
           {menuItems.map(item => (
             <Link
@@ -266,8 +313,8 @@ const Navbar: React.FC = () => {
           ))}
         </nav>
 
-        {/* 登录/注册按钮 */}
-        <div className="hidden md:flex items-center space-x-3">
+        {/* 右侧：登录/注册按钮 - 绝对定位 */}
+        <div className="hidden md:flex items-center space-x-3 absolute right-4">
           {isHomePage ? (
             <Dropdown
               trigger="click"
@@ -428,6 +475,14 @@ const Navbar: React.FC = () => {
         visible={unsavedChangesModalVisible}
         onConfirm={handleReturnToChat}
         onCancel={() => setUnsavedChangesModalVisible(false)}
+      />
+
+      {/* 语言选择时无 profile 提示模态框 */}
+      <NoProfilePromptModal
+        visible={profilePromptModalVisible}
+        languageLabel={selectedLanguage?.label || ''}
+        onCreate={handlePromptCreateProfile}
+        onSkip={handlePromptSkipProfile}
       />
     </header>
   )

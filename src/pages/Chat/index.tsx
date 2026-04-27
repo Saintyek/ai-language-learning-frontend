@@ -9,6 +9,7 @@ import DigitalHumanPanel from './components/DigitalHumanPanel'
 import ChatDialogArea from './components/ChatDialogArea'
 import ChatInputArea from './components/ChatInputArea'
 import { getChatSessionDetail, type ChatMessage } from '@/api/chat'
+import { scenarioToValueArray } from '@/utils/scenarioUtils'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 
 const Chat: React.FC = () => {
@@ -20,27 +21,40 @@ const Chat: React.FC = () => {
   const [loadingSession, setLoadingSession] = useState(false)
   const chatPanelRef = useRef<HTMLDivElement>(null)
 
+  // 使用自定义 Hooks - 需要在 loadSessionHistory 之前定义
+  const sceneSelection = useSceneSelection()
+  // 解构出 setSceneValue 用于 useCallback 依赖，避免整个对象作为依赖
+  const { setSceneValue } = sceneSelection
+
   // 加载会话历史
-  const loadSessionHistory = useCallback(async (sid: string) => {
-    setLoadingSession(true)
-    try {
-      const response = await getChatSessionDetail(sid)
-      if (response.data?.messages) {
-        const messages: AIChatMessage[] = response.data.messages.map((msg: ChatMessage) => ({
-          id: `loaded-${msg.id}`,
-          role: msg.role,
-          content: msg.content,
-          createdAt: new Date(msg.createdAt).getTime(),
-          status: 'completed' as const,
-        }))
-        setInitialMessages(messages)
+  const loadSessionHistory = useCallback(
+    async (sid: string) => {
+      setLoadingSession(true)
+      try {
+        const response = await getChatSessionDetail(sid)
+        if (response.data?.messages) {
+          const messages: AIChatMessage[] = response.data.messages.map((msg: ChatMessage) => ({
+            id: `loaded-${msg.id}`,
+            role: msg.role,
+            content: msg.content,
+            createdAt: new Date(msg.createdAt).getTime(),
+            status: 'completed' as const,
+          }))
+          setInitialMessages(messages)
+        }
+        // 设置场景值：从会话的 scenario 字段恢复场景选择
+        if (response.data?.scenario) {
+          const sceneValue = scenarioToValueArray(response.data.scenario)
+          setSceneValue(sceneValue)
+        }
+      } catch (error) {
+        console.error('Failed to load session history:', error)
+      } finally {
+        setLoadingSession(false)
       }
-    } catch (error) {
-      console.error('Failed to load session history:', error)
-    } finally {
-      setLoadingSession(false)
-    }
-  }, [])
+    },
+    [setSceneValue]
+  )
 
   // 如果有 sessionId，加载会话历史
   useEffect(() => {
@@ -48,11 +62,11 @@ const Chat: React.FC = () => {
       loadSessionHistory(sessionId)
     } else {
       setInitialMessages(undefined)
+      // 清空场景选择
+      setSceneValue([])
     }
-  }, [sessionId, loadSessionHistory])
+  }, [sessionId, loadSessionHistory, setSceneValue])
 
-  // 使用自定义 Hooks
-  const sceneSelection = useSceneSelection()
   const chat = useChat({
     langCode,
     sceneValue: sceneSelection.sceneValue,

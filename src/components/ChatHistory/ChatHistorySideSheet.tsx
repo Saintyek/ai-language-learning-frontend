@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { SideSheet, List, Typography, Empty, Spin, Toast } from '@douyinfe/semi-ui'
+import { SideSheet, List, Typography, Empty, Spin, Toast, Tag } from '@douyinfe/semi-ui'
 import { IconHistory, IconDelete } from '@douyinfe/semi-icons'
 import { useNavigate } from 'react-router-dom'
 import { getChatSessions, deleteChatSession, type ChatSession } from '@/api/chat'
 import { languageOptions } from '@/consts/languages'
+import { sceneOptions } from '@/consts/scenes'
 
 interface ChatHistorySideSheetProps {
   visible: boolean
@@ -72,6 +73,31 @@ const ChatHistorySideSheet: React.FC<ChatHistorySideSheetProps> = ({ visible, on
     })
   }
 
+  /**
+   * 格式化场景标签显示
+   * scenario 格式: "一级场景value/二级场景value"
+   * 返回二级场景的 label 用于显示
+   */
+  const getSceneTag = (scenario: string | null) => {
+    if (!scenario) return null
+
+    const parts = scenario.split('/')
+    if (parts.length !== 2) return null
+
+    const [firstLevelValue, secondLevelValue] = parts
+
+    // 查找一级场景
+    const firstLevelOption = sceneOptions.find(opt => opt.value === firstLevelValue)
+    if (!firstLevelOption?.children) return null
+
+    // 查找二级场景
+    const secondLevelOption = firstLevelOption.children.find(
+      child => child.value === secondLevelValue
+    )
+
+    return secondLevelOption ? secondLevelOption.label : null
+  }
+
   return (
     <SideSheet
       title={
@@ -101,9 +127,16 @@ const ChatHistorySideSheet: React.FC<ChatHistorySideSheetProps> = ({ visible, on
                     <Typography.Text strong className="truncate w-40">
                       {item.title}
                     </Typography.Text>
-                    <Typography.Text type="tertiary" size="small">
-                      {getLanguageLabel(item.language)}
-                    </Typography.Text>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Typography.Text type="tertiary" size="small">
+                        {getLanguageLabel(item.language)}
+                      </Typography.Text>
+                      {getSceneTag(item.scenario) && (
+                        <Tag size="small" color="blue" shape="circle" type="light">
+                          {getSceneTag(item.scenario)}
+                        </Tag>
+                      )}
+                    </div>
                   </div>
                 }
                 extra={

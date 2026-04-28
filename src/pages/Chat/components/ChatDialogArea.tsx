@@ -1,6 +1,8 @@
 import React from 'react'
 import { AIChatDialogue, Spin } from '@douyinfe/semi-ui'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
+import { useTextSelection } from '../../../hooks/useTextSelection'
+import { TranslateModal } from '@/components/TranslateModal/index'
 
 interface ChatDialogAreaProps {
   chats: AIChatMessage[]
@@ -25,6 +27,9 @@ export const ChatDialogArea: React.FC<ChatDialogAreaProps> = ({
   onHintClick,
   loading,
 }) => {
+  // 使用 document 级别的文本选择监听
+  const { selection, clearSelection } = useTextSelection(undefined, 1)
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -56,6 +61,9 @@ export const ChatDialogArea: React.FC<ChatDialogAreaProps> = ({
           style={{ height: '100%' }}
         />
       </div>
+
+      {/* 翻译 Modal */}
+      <TranslateModal selection={selection} onClose={clearSelection} />
     </>
   )
 }

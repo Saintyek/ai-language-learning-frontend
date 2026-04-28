@@ -3,11 +3,11 @@ import { Modal, Spin, Button } from '@douyinfe/semi-ui'
 import { IconPlay, IconCopy } from '@douyinfe/semi-icons'
 import { Toast } from '@douyinfe/semi-ui'
 import { translateText } from '../../api/translate'
-import type { TextSelection } from '../../hooks/useTextSelection'
+import type { SmartSelection } from '../../hooks/useSmartSelection'
 import type { TranslateResponse } from '../../api/translate'
 
 export interface TranslateModalProps {
-  selection: TextSelection | null
+  selection: SmartSelection | null
   onClose: () => void
 }
 

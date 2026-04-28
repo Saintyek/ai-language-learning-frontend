@@ -52,3 +52,15 @@
 .chat-scene-cascader-dropdown .semi-cascader-option-list:not(:first-child) {
   overflow-y: auto;
 }
+
+/* 智能选词样式 */
+.smart-word {
+  cursor: pointer;
+  display: inline;
+}
+
+.smart-word:hover,
+.smart-word--hover {
+  background-color: rgba(99, 102, 241, 0.15);
+  border-radius: 2px;
+}

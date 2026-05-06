@@ -10,7 +10,7 @@ export interface StreamChatParams {
   onChunk: (chunk: string) => void
   /** 场景标识，格式为 "一级场景/二级场景" */
   scenario?: string
-  /** 目标学习语言：cn-中文, jp-日文, kr-韩语, us-美式英语 */
+  /** 目标学习语言：cn-中文, jp-日文, es-西班牙语, us-美式英语 */
   language?: string
   /** 会话ID，如果传了则会保存消息到该会话 */
   sessionId?: string

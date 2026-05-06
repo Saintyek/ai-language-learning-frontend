@@ -1,6 +1,4 @@
-// src/utils/segmentation/detectLanguage.ts
-
-import { Language } from './types'
+import type { Language } from './types'
 
 /**
  * 检测文本的主要语言类型
@@ -16,7 +14,7 @@ export function detectLanguage(text: string): Language {
   let cjkCount = 0
   let hiraganaCount = 0
   let katakanaCount = 0
-  let hangulCount = 0
+  let spanishSpecialCount = 0
   let latinCount = 0
 
   for (const char of chars) {
@@ -34,9 +32,26 @@ export function detectLanguage(text: string): Language {
       continue
     }
 
-    // 谚文(韩文): U+AC00-U+D7AF
-    if (code >= 0xac00 && code <= 0xd7af) {
-      hangulCount++
+    // 西班牙语特有字符: ñ, á, é, í, ó, ú, ü, ¿, ¡
+    if (
+      code === 0x00f1 || // ñ
+      code === 0x00d1 || // Ñ
+      code === 0x00e1 || // á
+      code === 0x00c1 || // Á
+      code === 0x00e9 || // é
+      code === 0x00c9 || // É
+      code === 0x00ed || // í
+      code === 0x00cd || // Í
+      code === 0x00f3 || // ó
+      code === 0x00d3 || // Ó
+      code === 0x00fa || // ú
+      code === 0x00da || // Ú
+      code === 0x00fc || // ü
+      code === 0x00dc || // Ü
+      code === 0x00bf || // ¿
+      code === 0x00a1 // ¡
+    ) {
+      spanishSpecialCount++
       continue
     }
 
@@ -60,7 +75,7 @@ export function detectLanguage(text: string): Language {
   const total = chars.length
   const hiraganaRatio = hiraganaCount / total
   const katakanaRatio = katakanaCount / total
-  const hangulRatio = hangulCount / total
+  const spanishSpecialRatio = spanishSpecialCount / total
   const cjkRatio = cjkCount / total
   const latinRatio = latinCount / total
 
@@ -69,9 +84,9 @@ export function detectLanguage(text: string): Language {
     return 'ja'
   }
 
-  // 韩文判断: 存在谚文
-  if (hangulRatio > 0.1) {
-    return 'ko'
+  // 西班牙语判断: 存在西班牙语特有字符
+  if (spanishSpecialRatio > 0.02) {
+    return 'es'
   }
 
   // 中文判断: CJK 字符占主导

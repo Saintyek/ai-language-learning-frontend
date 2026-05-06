@@ -2,7 +2,7 @@
 
 import type { Segmenter, Language } from '../types'
 import { EnglishSegmenter } from './english'
-import { KoreanSegmenter } from './korean'
+import { SpanishSegmenter } from './spanish'
 import { JapaneseSegmenter } from './japanese'
 import { ChineseSegmenter, chineseSegmenter } from './chinese'
 
@@ -28,8 +28,8 @@ export function getSegmenter(language: Language): Segmenter {
     case 'ja':
       segmenter = new JapaneseSegmenter()
       break
-    case 'ko':
-      segmenter = new KoreanSegmenter()
+    case 'es':
+      segmenter = new SpanishSegmenter()
       break
     case 'en':
     case 'mixed':
@@ -44,6 +44,6 @@ export function getSegmenter(language: Language): Segmenter {
 
 // 导出所有分词器
 export { EnglishSegmenter } from './english'
-export { KoreanSegmenter } from './korean'
+export { SpanishSegmenter } from './spanish'
 export { JapaneseSegmenter } from './japanese'
 export { ChineseSegmenter, chineseSegmenter } from './chinese'

@@ -20,7 +20,7 @@ const getAuthHeaders = () => {
 export interface TranslateRequest {
   text: string
   /** 目标语言，默认为中文 */
-  targetLanguage?: 'zh' | 'en' | 'ja' | 'ko'
+  targetLanguage?: 'zh' | 'en' | 'ja' | 'es'
 }
 
 export interface TranslateResponse {

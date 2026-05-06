@@ -1,50 +1,38 @@
 // src/utils/segmentation/segmenters/chinese.ts
 
+import * as segmentitModule from 'segmentit'
 import type { Segmenter } from '../types'
+
+// 获取 Segment 和 useDefault（兼容 Vite 和 Node.js 环境）
+const Segment = segmentitModule.Segment
+const useDefault = segmentitModule.useDefault
+
+// 初始化分词器实例（单例）
+let segmentitInstance: ReturnType<typeof useDefault<typeof Segment>> | null = null
+
+function getSegmentitInstance() {
+  if (!segmentitInstance) {
+    segmentitInstance = useDefault(new Segment())
+  }
+  return segmentitInstance
+}
 
 /**
  * 中文分词器
- * 使用简单的规则进行分词，保留标点符号
+ * 使用 segmentit 库进行语义分词，支持词性标注
  */
 export class ChineseSegmenter implements Segmenter {
-  // 中文标点符号
+  // 中文标点符号（用于后续处理）
   private static readonly PUNCTUATION = /[，。！？；：'"（）【】「」『』、,.!?;:'"()\[\]{}]/
 
   segment(text: string): string[] {
-    const result: string[] = []
-    let current = ''
+    const segmentit = getSegmentitInstance()
 
-    for (const char of text) {
-      // 空白字符：结束当前词，空格也加入结果（用于显示，但不作为可点击词）
-      if (/[\s]/.test(char)) {
-        if (current) {
-          result.push(current)
-          current = ''
-        }
-        result.push(char) // 保留空格
-        continue
-      }
+    // 使用 segmentit 进行分词
+    const segments = segmentit.doSegment(text)
 
-      // 标点符号：结束当前词，标点单独成词
-      if (ChineseSegmenter.PUNCTUATION.test(char)) {
-        if (current) {
-          result.push(current)
-          current = ''
-        }
-        result.push(char)
-        continue
-      }
-
-      // 普通字符：累积到当前词
-      current += char
-    }
-
-    // 处理最后一个词
-    if (current) {
-      result.push(current)
-    }
-
-    return result
+    // 提取词语，保留原始顺序
+    return segments.map(seg => seg.w)
   }
 }
 

@@ -27,7 +27,7 @@ Identify inconsistencies, duplications, ambiguities, and underspecified items ac
 
 **STRICTLY READ-ONLY**: Do **not** modify any files. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
 
-**Constitution Authority**: The project constitution (`.ttadk/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/adk:sdd:analyze`.
+**Constitution Authority**: The project constitution (`docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects)) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/adk:sdd:analyze`.
 
 ## Execution Steps
 
@@ -70,7 +70,12 @@ Load only the minimal necessary context from each artifact:
 
 **From constitution:**
 
-- Load `.ttadk/memory/constitution.md` for principle validation
+- Load `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) for principle validation
+
+**From knowledge asset manifest (if available):**
+
+- **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+- Based on the manifest's "SDD Command Knowledge Guidance" section for analyze phase, load the relevant docs (e.g., QUALITY.md, CODING.md)
 
 ### 3. Build Semantic Models
 

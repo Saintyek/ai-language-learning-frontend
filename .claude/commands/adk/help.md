@@ -40,6 +40,8 @@ Use this classification to decide which of the following steps to execute. **Ski
 
 ### 2. Load Knowledge Base
 
+Use installed skills when they provide packaged runtime assets. For example, `ttadk-knowledge` serves help answers, and `adk:sdd:codereview` serves the review workflow and its bundled references.
+
 Use the `ttadk-knowledge` skill to answer user questions:
 
 1. Read the skill via `.ttadk/plugins/ttadk/core/skills/ttadk-knowledge/SKILL.md`
@@ -101,7 +103,7 @@ Stage detection logic:
 
 If the user's question relates to their specific project context:
 
-- Read `.ttadk/memory/constitution.md` for project principles
+- Read `docs/CONSTITUTION.md` for project principles (fallback: `.ttadk/memory/constitution.md` for legacy projects)
 - Skim existing artifacts (spec.md, plan.md, etc.) for relevant context
 - Do NOT load full artifact contents unless directly needed to answer the question
 
@@ -143,7 +145,7 @@ Based on the detected SDD state and user's question, recommend the most logical 
 | planned | Run `/adk:sdd:erd` for technical design if needed, or `/adk:sdd:tasks` for task breakdown |
 | designed | Run `/adk:sdd:tasks` for task breakdown |
 | tasked | Run `/adk:sdd:analyze` for read-only artifact quality check, or `/adk:sdd:implement` to start coding |
-| implementing | Continue with `/adk:sdd:implement`, or `/adk:commit` when ready |
+| implementing | Continue with `/adk:sdd:implement`, run `/adk:sdd:simplify` to converge the implementation, then `/adk:sdd:codereview` before commit, and finally `/adk:commit` |
 | committed | Run `/adk:sdd:archive` to archive the feature |
 
 If the user's question implies a specific need, tailor the recommendation accordingly.

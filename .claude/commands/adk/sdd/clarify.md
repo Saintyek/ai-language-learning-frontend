@@ -30,6 +30,7 @@ Note: This clarification workflow can run at ANY point during the design stage. 
 - `/adk:sdd:plan` → `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
 - `/adk:sdd:erd` → `technical-design.md` (Technical Design Document)
 - `/adk:sdd:tasks` → `tasks.md`
+- `/adk:sdt:ff` → `test/`
 
 **Usage Examples**:
 - Run after `/adk:sdd:specify` only → Updates only `spec.md`
@@ -51,6 +52,7 @@ Execution steps:
       * `FEATURE_DIR/quickstart.md` (from `/adk:sdd:plan` Phase 1)
       * `FEATURE_DIR/tasks.md` (from `/adk:sdd:tasks`)
       * `FEATURE_DIR/technical-design.md` (from `/adk:sdd:erd`)
+      * `FEATURE_DIR/test/` directory (from `/adk:sdt:ff`)
     - **Build and maintain a DISCOVERED_DOCS tracking list** with existence status for each document:
       ```
       DISCOVERED_DOCS = {
@@ -63,7 +65,9 @@ Execution steps:
     - This list is **REQUIRED** for Step 6 and Step 9 - every existing document must be processed.
 
 2. Load guiding principles and current spec:
-   - Read `.ttadk/memory/constitution.md` - consider these principles when evaluating clarification impact
+   - Read `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) - consider these principles when evaluating clarification impact
+   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+   - Based on the manifest's "SDD Command Knowledge Guidance" section for clarify phase (same as the phase of the artifact being clarified), load the relevant docs to maintain knowledge consistency
    - Load the current spec file
    - Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
 
@@ -254,6 +258,8 @@ Execution steps:
 
     **If `tasks.md` exists:** ← **THIS IS MANDATORY IF tasks.md EXISTS**
     - Read existing `tasks.md` to understand current task breakdown.
+    - Treat `- [x]` / `- [X]` tasks as implementation history that is already claimed complete.
+    - **Do not silently reopen completed tasks** just because a clarification changes future work.
     - **ALWAYS perform impact analysis** - do not skip this step:
       * Review each clarification Q&A from this session
       * Map each clarification to potentially affected task categories
@@ -264,10 +270,33 @@ Execution steps:
       * Non-functional requirement added/changed → Add corresponding performance/security tasks
       * Scope changed (added/removed features) → Add/remove/reorder tasks accordingly
       * New integration point identified → Add integration tasks
+    - **Completed-task preservation rule:**
+      * If a clarification adds net-new work after a completed task, keep the completed task checked and append new `- [ ]` follow-up tasks for the delta.
+      * If a clarification tightens acceptance criteria for work not yet implemented, update the relevant incomplete task directly.
+      * Do not rewrite the requirement wording of a completed task to match post-implementation clarifications while leaving it checked.
+      * If a completed task no longer matches the clarified requirement, keep its original completed wording as implementation history and add a new `- [ ]` follow-up or replacement task for the clarified behavior. Only reopen the task if you explicitly convert it back to `- [ ]` from `- [x]`.
+      * Only remove a completed task if it was duplicated or entered in error, and explicitly document that reason in the completion report.
+    - Prefer additive task updates over rewriting completed history. The default pattern is: keep completed work immutable, then model clarification fallout as newly added pending tasks.
     - Update tasks to align with clarified spec and updated plan.
     - **If no updates needed**: Document specific reason why each clarification does NOT affect tasks
       (e.g., "Clarification Q1 only affects UI text, no task changes needed")
     - Save updated tasks.md.
+
+    **D. Update `/adk:sdt:ff` outputs (if they exist):**
+
+    **If `test/` directory exists:**
+    - Read existing `test/` directory to understand current test design files (case.md, task.md).
+    - **Update triggers** (if ANY of these apply, test design MUST be updated):
+      * Functional requirement clarified → test cases covering that requirement need review
+      * New edge case or error handling identified → new test scenarios needed
+      * Data model or API definition changed → test data and assertions need alignment
+      * Acceptance criteria modified → corresponding verification steps must update
+      * Non-functional requirement added/changed → performance/security test cases may be affected
+    - If impacted:
+      * Run `/adk:sdt:clarify` to update test design files
+      * **Suppress** the "Next Step Guidance" section produced by `/adk:sdt:clarify`; do not display it to the user.
+    - **If no updates needed**: Document specific reason why each clarification does NOT affect test design
+      (e.g., "Clarification Q1 only affects UI text, no test design changes needed")
 
 7. Validation (performed after EACH write plus final pass):
     - Clarifications session contains exactly one bullet per accepted answer (no duplicates).
@@ -286,6 +315,7 @@ Execution steps:
       * Edge cases or error handling → corresponding validation tasks must exist
       * Data model changes → model/migration tasks must be updated
       * Non-functional requirements → performance/security tasks must exist
+    - **If affected tasks were already completed, validation expects additive follow-up tasks instead of reverting `- [x]` to `- [ ]` by default.**
     - **FAIL validation if:**
       * Any existing document was neither updated nor explicitly reviewed
       * tasks.md exists but was skipped without documented justification for each clarification
@@ -308,6 +338,7 @@ Execution steps:
     | quickstart.md | ✓/✗ | ✓/✗   | (list sections)  | (reason or "-")      |
     | technical-design.md | ✓/✗ | ✓/✗ | (list sections) | (reason or "-")    |
     | tasks.md | ✓/✗    | ✓/✗     | (list tasks/phases) | (reason or "-")   |
+    | test/ | ✓/✗   | ✓/✗     | (list files)     | (reason or "-")      |
 
     - **If any document exists but was NOT updated, you MUST provide explicit reasoning in the table**
     - Coverage summary table listing each taxonomy category with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
@@ -327,6 +358,7 @@ Behavior rules:
 - **If tasks.md exists, you MUST either:**
   1. Update it based on clarifications, OR
   2. Explicitly state in the Document Update Summary why no updates were needed (with specific analysis per clarification)
+- **When updating tasks.md, preserve completed-task history by default; represent clarification-induced rework as newly added pending tasks unless the original completed entry was erroneous.**
 - **Never report completion without having processed ALL existing design documents**
 - **Document skips are NOT allowed** - every document in DISCOVERED_DOCS where `exists: true` must be analyzed
 - Early termination by user does NOT exempt you from Step 6 document synchronization

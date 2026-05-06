@@ -51,7 +51,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
       * Automatically proceed to step 3
 
 3. Load and analyze the implementation context:
-   - **REQUIRED**: Read `.ttadk/memory/constitution.md` for guiding principles - adhere strictly during implementation
+   - **REQUIRED**: Read `docs/CONSTITUTION.md` for guiding principles (fallback: `.ttadk/memory/constitution.md` for legacy projects) - adhere strictly during implementation
    - **REQUIRED**: Read spec.md to understand the *what* and *why* (requirements and goals)
    - **REQUIRED**: Read tasks.md for the complete task list and execution plan
    - **REQUIRED**: Read plan.md for tech stack, architecture, and file structure
@@ -59,6 +59,8 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - **IF EXISTS**: Read contracts/ for API specifications and test requirements
    - **IF EXISTS**: Read research.md for technical decisions and constraints
    - **IF EXISTS**: Read quickstart.md for integration scenarios
+   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+   - Based on the manifest's "SDD Command Knowledge Guidance" section for implement phase, load the relevant docs (e.g., CODING.md, references/config-templates.md, RELIABILITY.md, SECURITY.md)
 
 4. Parse tasks.md structure and extract:
    - **Task phases**: Setup, Foundational prerequisites, user-story phases, Polish/Cross-Cutting
@@ -99,17 +101,25 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - For parallel tasks [P], continue with successful tasks, report failed ones
    - Provide clear error messages with context for debugging
 
-9. Completion validation:
+9. **Simplify completed implementation scope**:
+   - After completing a story, phase, or other coherent implementation scope, perform a simplify pass before final completion validation.
+   - First apply lightweight simplification judgment directly during implementation: prefer existing abstractions, remove obvious duplication, and avoid unnecessary complexity when this does not change behavior or expand scope.
+   - Then explicitly invoke `/adk:sdd:simplify` for the completed scope (or the active story/task/files if the scope is narrower).
+   - Treat simplify as a constrained post-implementation refinement pass: preserve requirement semantics, stay within the current task boundary, and avoid unrelated refactors.
+   - Re-run the affected validation after simplify before proceeding.
+   - When reporting this step, use concise process-oriented status updates such as: current scope is complete → start simplify pass → state simplify scope → summarize simplifications → confirm validation passed.
+
+10. Completion validation:
    - Verify all required tasks are completed
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements
    - Confirm the implementation follows the technical plan
 
-10. **Final Task Completion Check**:
+11. **Final Task Completion Check**:
    - Re-read `tasks.md` and verify no `- [ ]` remains
    - If incomplete tasks exist, complete them before proceeding
 
-11. Build and test validation:
+12. Build and test validation:
    - After all tasks are completed, try to compile and test the project based on its build system
    - Common build systems to check:
      * `package.json` → Try `npm run build` or `npm test`
@@ -121,6 +131,25 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - If compilation or tests fail, analyze the errors and fix the issues
    - Re-run the build/test until successful
    - Report final status with summary of completed work and build/test results
+
+13. **Automatic Test Execution (SDT)**:
+   - Check if test artifacts (such as `test/tasks.md` and `test/case.md`) exist in the `test` directory.
+   - If these test artifacts exist, immediately execute the `/adk:sdt:implement` workflow to run the test cases and generate a test report.
+   - Do not pause or ask the user for permission before doing this.
+   - If no test artifacts are found, skip this step.
+
+14. **Test Failure Triage & Business Code Fix**:
+   - After `/adk:sdt:implement` completes, read the generated `test/report.md`.
+   - Extract all failed test cases (❌ FAIL) from the report, including their TC-ID, title, failure reason, root cause analysis, and suggested fix.
+   - Present the list of failed cases to the user in a clear table format and ask: "The following test cases failed. Which ones would you like me to fix? (Enter TC-IDs, e.g., TC-001,TC-003, or 'all' to fix all, or 'skip' to skip)"
+   - **Wait for user response before proceeding.**
+   - Based on the user's selection:
+     - For each selected failed case, analyze the root cause and fix the **business/production code** (NOT the test cases).
+     - Use the failure analysis from the report (error message, code location, root cause, fix suggestion) as guidance.
+     - After fixing the business code, re-run the build/test validation (step 11) to ensure the code compiles and passes local tests.
+     - Then re-execute `/adk:sdt:implement` to verify the previously failed test cases now pass.
+     - If new failures appear after the re-run, repeat the triage process (present failures → ask user → fix → re-run) until all selected cases pass or the user chooses to skip.
+   - If the user chooses 'skip', proceed directly to the Next Step Guidance.
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/adk:sdd:tasks` first to regenerate the task list.
 

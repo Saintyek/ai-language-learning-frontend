@@ -22,9 +22,14 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 
 1. **Setup**: Run `node .ttadk/plugins/ttadk/core/resources/scripts/setup-plan.js --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, FEATURE_NAME.
 
-2. **Load context**: Read FEATURE_SPEC and `.ttadk/memory/constitution.md`. Load IMPL_PLAN template (already copied).
+2. **Load context**: Read FEATURE_SPEC and `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects). Load IMPL_PLAN template (already copied).
 
-3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
+3. **Read compound knowledge assets** (if available):
+   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+   - Based on the manifest's "SDD Command Knowledge Guidance" section for plan phase, load the relevant docs (e.g., arch/service-topology.md, arch/patterns.md, SECURITY.md, RELIABILITY.md)
+   - Use these assets to inform architecture decisions and technology choices
+
+4. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
     - Fill Technical Context section (mark unknowns as "NEEDS CLARIFICATION")
     - Fill Constitution Check section from constitution
     - Evaluate gates (ERROR if violations unjustified)
@@ -32,7 +37,12 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
     - Phase 1: Generate data-model.md, contracts/, quickstart.md
     - Re-evaluate Constitution Check post-design
 
-4. **Stop and report**: Command ends after the planning artifacts for Phase 0 and Phase 1 are generated. Report feature name, IMPL_PLAN path, and generated artifacts.
+5. **Write plan.md safely**: When writing or updating `IMPL_PLAN` (`plan.md`), preserve section order and headings.
+    - **Write-size guardrail**: First write ≤ 150 lines; each subsequent update ≤ 100 lines (measured by newline-delimited line count)
+    - If a single write would exceed the limit, split by complete lines into multiple writes, preserving order
+    - Do not overwrite existing content, do not fail, and do not omit required content
+
+6. **Stop and report**: Command ends after the planning artifacts for Phase 0 and Phase 1 are generated. Report feature name, IMPL_PLAN path, and generated artifacts.
 
 ## Phases
 

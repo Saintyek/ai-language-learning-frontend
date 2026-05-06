@@ -36,14 +36,11 @@
       }
     },
     "playwright": {
-      "command": "bunx",
+      "command": "npx",
       "args": [
-        "--registry=http://bnpm.byted.org/",
+        "-y",
         "@playwright/mcp@latest"
-      ],
-      "env": {
-        "NPM_CONFIG_REGISTRY": "http://bnpm.byted.org/"
-      }
+      ]
     }
   }
 }

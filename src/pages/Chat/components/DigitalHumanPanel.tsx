@@ -18,10 +18,10 @@ export const DigitalHumanPanel: React.FC<DigitalHumanPanelProps> = ({
   languageLabel,
 }) => {
   return (
-    <div className="hidden lg:flex w-2/5 xl:w-1/3 bg-gradient-to-b from-indigo-100/50 to-purple-100/50 flex-col items-center justify-center p-8 border-r border-slate-200/30">
+    <div className="hidden lg:flex w-2/5 xl:w-1/3 bg-linear-to-b from-indigo-100/50 to-purple-100/50 flex-col items-center justify-center p-8 border-r border-slate-200/30">
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full blur-3xl opacity-30 animate-pulse" />
-        <div className="absolute inset-4 bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full blur-2xl opacity-40" />
+        <div className="absolute inset-0 bg-linear-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full blur-3xl opacity-30 animate-pulse" />
+        <div className="absolute inset-4 bg-linear-to-r from-sky-400 to-indigo-500 rounded-full blur-2xl opacity-40" />
 
         <DigitalHumanStage
           status={digitalHuman.status}

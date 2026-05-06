@@ -25,8 +25,10 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
       - Default to 'en' if the file or key is missing.
       - **Crucially, all subsequent outputs MUST be in this language.**
   2.  **Load Core Instructions:**
-      - Read `.ttadk/memory/constitution.md`.
+      - Read `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects).
       - These are your guiding principles. Adhere to them strictly.
+      - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+      - Based on the manifest's "SDD Command Knowledge Guidance" section for ff phase, load the relevant docs (e.g., product-specs/patterns.md, arch/patterns.md, CODING.md)
   3.  **Analyze User Request (`$ARGUMENTS`):**
       - If `$ARGUMENTS` contains a URL (e.g., a Lark document), fetch its full content and use that as the primary input.
       - Carefully parse the final text to understand the core feature requirements.
@@ -55,12 +57,13 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
   ### **Phase 3: Document Generation**
 
   **Objective:** Create the feature specification, implementation plan, and task breakdown.
-
+  
   **Write-size Guardrail for Generated Documents (`spec.md`, `plan.md`, `tasks.md`):**
   - The first write to each generated document MUST be <= 150 lines and should establish the document skeleton plus initial section(s).
   - Each subsequent update to each generated document MUST be <= 100 lines.
   - If a single write would exceed the limit, split it into multiple sequential updates by complete lines while preserving order.
   - Append/update incrementally. Do not overwrite existing content, do not fail, and do not omit or over-summarize required content.
+
 
   1.  **Get Feature Name & Setup Files:**
       - Analyze the feature description and extract key concepts (actors, actions, outcomes)
@@ -94,6 +97,21 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
       - Load the `tasks.md`.
       - Break down the implementation plan into a series of small, actionable development tasks.
       - Each task should be a logical, sequential step that a developer can pick up and complete. This must perfectly align with the User Stories defined in the plan.
+
+  ---
+
+  ### **Phase 4: Test Task Generation Workflow Execution**
+
+  **Objective:** Run the test task generation workflow and draft test documents.
+
+  1. **Prerequisite — Resolve Full User Input**:
+     - If the user input is or contains a Lark document URL, you **MUST** read the entire exported content before proceeding.
+  2. **Determine Whether to Generate Tests**:
+     - Scan the resolved user input for test-related descriptions (e.g., test cases, test scenarios, test process, acceptance criteria with verify/assert language).
+     - **If found → execute**; **if not found → skip this phase entirely**.
+  3. **Execute Workflow** (only when test-related content exists):
+     - Run the `/adk:sdt:ff` command immediately — do **not** pause or ask the user for permission.
+     - **Suppress** the "Next Step Guidance" section produced by `/adk:sdt:ff`; do not display it to the user.
 
   ---
 

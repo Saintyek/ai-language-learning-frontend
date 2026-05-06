@@ -103,9 +103,9 @@ For each **selected** dimension, execute the checks listed below. Use a **progre
 
 | Check | Type | Level | Points | How to Verify |
 |---|---|---|---|---|
-| AI instruction files exist | PASS/FAIL | L2 | 3 | Check for: `CLAUDE.md`, `.cursorrules`, `.cursor/rules/`, `AGENTS.md`, `.windsurfrules`, `.github/copilot-instructions.md`, or **equivalent** AI context in `README.md` / `docs/` / `.ttadk/memory/constitution.md` (count as 1 file if substantial). Score: 1 file = 1pt, 2 = 2pt, 3+ = 3pt |
+| AI instruction files exist | PASS/FAIL | L2 | 3 | Check for: `CLAUDE.md`, `.cursorrules`, `.cursor/rules/`, `AGENTS.md`, `.windsurfrules`, `.github/copilot-instructions.md`, or **equivalent** AI context in `README.md` / `docs/` / `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) (count as 1 file if substantial). Score: 1 file = 1pt, 2 = 2pt, 3+ = 3pt |
 | AI instruction file quality | Gradient | L3 | 2 | If file(s) found: >50 lines = 1pt; contains architecture/conventions/prohibitions sections = 2pt |
-| TTADK configuration | PASS/FAIL | L2 | 2 | `.ttadk/` exists = 1pt; has `config.json` + `memory/constitution.md` = 2pt |
+| TTADK configuration | PASS/FAIL | L2 | 2 | `.ttadk/` exists = 1pt; has `config.json` + `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md`) = 2pt |
 | MCP configuration | PASS/FAIL | L3 | 2 | `.mcp.json` exists = 1pt; has project-specific MCP servers configured = 2pt |
 | AI Skills configuration | PASS/FAIL | L4 | 1 | `.claude/skills/` or equivalent AI skill/knowledge config exists |
 
@@ -204,7 +204,7 @@ For each **selected** dimension, execute the checks listed below. Use a **progre
 | Check | Type | Level | Points | How to Verify |
 |---|---|---|---|---|
 | TTADK initialized | PASS/FAIL | L3 | 1 | `.ttadk/` directory with complete config |
-| Constitution | PASS/FAIL | L3 | 2 | `constitution.md` exists = 1pt; comprehensive content (coding standards, quality gates) = 2pt |
+| Constitution | PASS/FAIL | L3 | 2 | `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) exists = 1pt; comprehensive content (coding standards, quality gates) = 2pt |
 | Specs directory | PASS/FAIL | L4 | 3 | `specs/` exists = 1pt; structured spec files = 2pt; covers major modules = 3pt |
 | Requirements traceability | Gradient | L4 | 2 | Requirements docs/links exist = 1pt; code-to-requirement traceable = 2pt |
 | Feature index | PASS/FAIL | L4 | 2 | Module/feature list exists = 1pt; documentation coverage complete = 2pt |

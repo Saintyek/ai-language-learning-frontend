@@ -27,7 +27,120 @@ Given that feature description, do this:
 
 1. **Input Quality Assessment**: Evaluate the completeness of user input before proceeding.
 
-    a. **Assess across five dimensions** (score each 0-2: Low/Medium/High):
+    a. **Document Detection & Business Type Classification**:
+
+    First, determine whether the user input contains a structured document or document link (lark/feishu doc URL, local `.md` file path, or content that contains sections, tables, code blocks, mermaid diagrams — i.e., goes beyond a brief natural-language description).
+
+    - **If a document/link is present**: Read the full document content (using lark-docs MCP export for lark/feishu URLs, or direct file read for local paths). Then classify the business type by scanning for signal keywords:
+
+        | Business Type | Signal Keywords & Patterns (match ANY) |
+        |---------------|----------------------------------------|
+        | **backend** | PSM names (e.g., `local_alliance_*`), IDL references (`Request`/`Response` structs, protobuf), DB table/field changes (`新增字段`/`修改字段`), Go file paths (`.go`), RPC/gRPC calls, `domain/`/`action/`/`dal/` code paths, mermaid flowcharts with service nodes, TCC config |
+        | **client** | Platform markers (`Android`, `iOS`, `TikTok`, `TikTok-Lite`), TUX components (`TUXIntroPanel`), `ARouter` / `Coordinator`, `.kt`/`.swift` file paths, Figma links with mobile UI, `R.color.*`/`R.drawable.*`, `Glide`, AB test config with traffic splits |
+        | **lynx** | `ReactLynx`, Spark JSB (`x.request`, JSBridge), `lynx-figma-to-code`, `lynxbase-mcp`, `spark-mcp`, `hdt-mcp`, `jotai`, container APIs, `.tsx` files in lynx project structure |
+        | **web** | `Valtio`/`Redux`/`proxy()`, `Semi-UI`/`gne-base-components`, route config (`path:`/`component: lazy()`), `bam.config`, `pages/` directory structure, `apps/op-tool/`, `searchParams`, BAM IDL |
+
+    - **Classification rules**:
+        - Count signal matches per type. Select the type with the highest match count.
+        - If two types tie, prefer the type whose signals appear in structural positions (headings, table headers) over those appearing only in body text.
+        - If no type gets >= 2 signal matches, classify as `unknown` and skip template linting — fall through to generic scoring only (sub-step **d**).
+
+    - **If NO document/link is present** (user provided only a brief natural-language description): Skip directly to sub-step **(d)** for generic 5-dimension scoring only.
+
+    b. **Template-Based Linter Check** (only when business type is identified in step a):
+
+    Load the corresponding ERD template from `.ttadk/plugins/ttadk/core/resources/templates/specify-input-template/`:
+
+    | Business Type | Template File |
+    |---------------|---------------|
+    | backend | `backend-erd-template.md` |
+    | client | `client-erd-template.md` |
+    | lynx | `lynx-erd-template.md` |
+    | web | `web-erd-template.md` |
+
+    Compare the user's document content against the template's required sections. For each section, assess coverage status as one of: ✅ adequate / ⚠️ incomplete / ❌ missing.
+
+    **Backend linter sections**:
+
+    | Section | Level | ✅ Adequate | ⚠️ Incomplete | ❌ Missing |
+    |---------|-------|-------------|---------------|-----------|
+    | 需求背景 | mandatory | Clear problem statement with design principles (>50 chars) | Has background but vague on goals | Section absent |
+    | 涉及工程 (PSM + paths) | mandatory | Table with PSM, repo paths, and change types | Some services listed but no paths or change types | Section absent |
+    | 功能模块 (≥1 module with 功能概述) | mandatory | At least 1 module with 功能概述 + IDL + DB + 代码改动 + 调用链路 | Module(s) present but missing ≥2 sub-sections | No modules defined |
+    | IDL 变更 (per module) | mandatory | Table with change type, object, description | Mentioned but no structured table | Absent |
+    | DB 变更 (per module) | mandatory | Table with change type, table/field, description | Mentioned but incomplete | Absent |
+    | 代码改动 (per module) | mandatory | Table with change type, file/method, description | Some files listed but no detail | Absent |
+    | 调用链路 (per module) | mandatory | Mermaid diagram or clear textual call chain | Partial description | Absent |
+    | 行业差异化逻辑汇总 | conditional | Comparison table across dimensions | Partial comparison | Absent when multiple industries exist |
+    | 风险点 | recommended | Numbered risk items with mitigation hints | Risks mentioned but vague | Absent |
+
+    **Client linter sections**:
+
+    | Section | Level | ✅ Adequate | ⚠️ Incomplete | ❌ Missing |
+    |---------|-------|-------------|---------------|-----------|
+    | Basic Info (Platform, App, Goal) | mandatory | All three fields specified | 1-2 fields present | Section absent |
+    | Editable Scope & File Manifest | mandatory | File list with `[NEW]`/`[MOD]`/`[REF]` tags and descriptions | Files listed but no tags or descriptions | Section absent |
+    | UI/UX Structure + Figma | optional | Figma links per UI block with component mapping | Partial Figma links | N/A |
+    | Data Models & API | optional | Pseudo-code models + API endpoints with error handling | Partial models or missing error handling | N/A |
+    | Business Logic (When→Then) | mandatory | Init + Interaction flows in When→Then structure | Some logic described but not in When→Then format | Section absent |
+    | Event Tracking | optional | Event table + parameter definitions | Events listed, no parameters | N/A |
+    | AB Testing | optional | Experiment groups with traffic splits | Mentioned but no config | N/A |
+    | Constraints | recommended | Navigation, images, theme rules specified | Partial constraints | Absent |
+
+    **Lynx linter sections**:
+
+    | Section | Level | ✅ Adequate | ⚠️ Incomplete | ❌ Missing |
+    |---------|-------|-------------|---------------|-----------|
+    | 功能简述 | mandatory | Checklist of functional points | Vague single-line description | Section absent |
+    | 方案设计: 交互流程 | mandatory | Per-page/component interaction flows | Some flows but not per-page | Section absent |
+    | 方案设计: 状态管理 | mandatory | State management approach specified (e.g., jotai) | Mentioned but no detail | Absent |
+    | 方案设计: 组件通信 | mandatory | Data flow between components described | Vague | Absent |
+    | 设计稿 (Figma) | recommended | Per-page Figma node URLs with notes | Single link, no per-page breakdown | Absent |
+    | 组件依赖分析 | mandatory | Component list with source/implementation/figma per component | Components listed but missing source | Section absent |
+    | 能力依赖: 容器 | mandatory | JSBridge calls with platform and API details | Mentioned but no API structure | Section absent |
+    | 能力依赖: 现有能力 | mandatory | Existing utilities/methods with usage examples | Listed but no usage detail | Section absent |
+    | 能力依赖: 接口 | mandatory | API endpoints with type definitions or IDL config | Some endpoints but no types | Section absent |
+
+    **Web linter sections**:
+
+    | Section | Level | ✅ Adequate | ⚠️ Incomplete | ❌ Missing |
+    |---------|-------|-------------|---------------|-----------|
+    | 功能简述 | mandatory | Checklist of functional points | Vague description | Section absent |
+    | 整体架构 | conditional | Page structure diagram + data flow | Partial structure | Absent when multi-page |
+    | 目录规划 | conditional | Directory tree with file placement | Partial | Absent when multi-page |
+    | 技术选型 | conditional | Selection with rationale | Selection without rationale | Absent when new deps |
+    | 全局状态管理 | conditional | Store design with types + state ownership table | Mentioned but no design | Absent when cross-page state |
+    | 公共组件封装 | conditional | Props interface + placement + usage scenarios | Listed but no interface | Absent when cross-page reuse |
+    | 页面方案 (≥1 page) | mandatory | At least 1 page with: 设计稿 + 交互流程 + 异常处理 + 状态管理 + 组件拆分 + 接口设计 | Page present but missing ≥3 sub-sections | No pages defined |
+    | 埋点设计 | optional | Event table with parameters | Events listed, no params | N/A |
+    | 权限设计 | optional | Permission table with keys and scope | Partial | N/A |
+    | 路由 & 菜单配置 | recommended | Route config code + menu hierarchy | Partial config | Absent |
+
+    **Linter scoring rules**:
+    - `mandatory`: ✅=2, ⚠️=1, ❌=0
+    - `conditional` (condition met): ✅=2, ⚠️=1, ❌=0 — if condition NOT met, exclude from scoring
+    - `recommended`: ✅=1, ⚠️=0.5, ❌=0
+    - `optional`: ✅=0.5, ⚠️=0.25, ❌=0 (bonus only, does not reduce score)
+    - **Template Coverage Score** = earned points / max possible points (mandatory + conditional + recommended) × 100%
+
+    c. **Merge Linter + Generic Scoring → Unified Score**:
+
+    Always run the generic 5-dimension scoring from sub-step **(d)** regardless of whether template linting was performed.
+
+    - **When template linting WAS performed** (document with identified business type):
+      **Unified Score** = Generic Score (0-10) × 40% + Template Coverage (0-100%) × 0.1 × 60%, mapped to 0-10 scale
+    - **When template linting was NOT performed** (no document, or `unknown` type):
+      **Unified Score** = Generic Score (0-10) as-is
+
+    **Tier determination** (applied to Unified Score):
+
+    | Unified Score | Tier | Action |
+    |---------------|------|--------|
+    | **8-10** | Sufficient | Proceed directly with specification generation |
+    | **5-7** | Workable | Proceed with notes on weak areas; AI will make reasonable inferences marked as `[INFERRED]` |
+    | **0-4** | Early-stage | Recommend enriching input or using `/adk:sdd:brainstorm` (if available). **Stop and wait for user confirmation before proceeding.** |
+
+    d. **Generic 5-Dimension Scoring** (always applied, score each 0-2: Low/Medium/High):
 
     | Dimension | High (2) | Medium (1) | Low (0) |
     |-----------|----------|------------|---------|
@@ -37,15 +150,41 @@ Given that feature description, do this:
     | **Scope & Constraints** | Explicit boundaries and constraints | Partial constraints mentioned | No scope information |
     | **Acceptance Hint** | Measurable success criteria | Implicit expectations | No completion criteria |
 
-    b. **Calculate maturity score** (sum of all dimensions, 0-10) and determine tier:
+    e. **Present Unified Assessment to user** (use configured language):
 
-    | Score | Tier | Action |
-    |-------|------|--------|
-    | **8-10** | Sufficient | Proceed directly with specification generation |
-    | **5-7** | Workable | Proceed with a note on weak dimensions; AI will make reasonable inferences marked as `[INFERRED]` |
-    | **0-4** | Early-stage | Recommend enriching input or using `/adk:sdd:brainstorm` (if available). **Stop and wait for user confirmation before proceeding.** |
+    **Format A — When template linting was performed:**
 
-    c. **Present assessment to user** (use configured language):
+        ```markdown
+        ## Input Assessment
+
+        **Detected Business Type**: [backend | client | lynx | web]
+        **Template Used**: [template filename]
+        **Maturity: [TIER]** (Unified: [SCORE]/10 — Generic: [G]/10, Template Coverage: [T]%)
+
+        ### Generic Quality Score ([G]/10)
+
+        | Dimension            | Score | Note                        |
+        |----------------------|-------|-----------------------------|
+        | Goal Clarity         | [X]/2 | [brief note]                |
+        | Actor Identification | [X]/2 | [brief note]                |
+        | Functional Behavior  | [X]/2 | [brief note]                |
+        | Scope & Constraints  | [X]/2 | [brief note]                |
+        | Acceptance Hint      | [X]/2 | [brief note]                |
+
+        ### Template Coverage Report ([T]%)
+
+        | Section | Level | Status | Feedback |
+        |---------|-------|--------|----------|
+        | [section name] | mandatory | ✅ adequate / ⚠️ incomplete / ❌ missing | [specific actionable feedback] |
+        | ... | ... | ... | ... |
+
+        ### Recommendation
+        - **Sufficient**: "Input is well-structured and covers key template sections. Proceeding with specification generation."
+        - **Workable**: "Proceeding. The following template sections need attention: [list missing/incomplete mandatory sections]. AI will infer where possible (marked [INFERRED]). Refine later via `/adk:sdd:clarify`."
+        - **Early-stage**: "The document is missing critical sections: [list missing mandatory sections]. Consider enriching the ERD document, or proceed — the spec can be refined later via `/adk:sdd:clarify`."
+        ```
+
+    **Format B — When template linting was NOT performed (generic scoring only):**
 
         ```markdown
         ## Input Assessment
@@ -66,7 +205,7 @@ Given that feature description, do this:
         - **Early-stage**: "Input is brief. Consider enriching it for better results, or proceed — the spec can be refined later via `/adk:sdd:clarify`."
         ```
 
-    d. **Routing**:
+    f. **Routing**:
     - **Sufficient / Workable**: Proceed to step 2 automatically.
     - **Early-stage**: Present the assessment, then **stop and ask the user whether to proceed or enrich input first**. Do NOT continue to step 2 until the user explicitly confirms. If user confirms, the generated spec will contain more `[INFERRED]` content.
 
@@ -80,11 +219,16 @@ Given that feature description, do this:
 - This script generates a feature name (YYYYMMDD-description format), creates `specs/{feature-name}/` directory, and copies spec.md template.
 - Parse the JSON output to get FEATURE_DIR and SPEC_FILE path.
 
-3. **Load guiding principles**: Read `.ttadk/memory/constitution.md` and apply these principles when generating the specification.
+3. **Load guiding principles**: Read `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) and apply these principles when generating the specification.
 
-4. Load `.ttadk/plugins/ttadk/core/resources/templates/spec-template.md` to understand required sections.
+4. **Read compound knowledge assets** (if available):
+   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+   - Based on the manifest's "SDD Command Knowledge Guidance" section for specify phase, load the relevant docs (e.g., product-specs/patterns.md, QUALITY.md)
+   - Use these assets to inform requirement analysis and avoid duplicating established patterns
 
-5. Follow this execution flow:
+5. Load `.ttadk/plugins/ttadk/core/resources/templates/spec-template.md` to understand required sections.
+
+6. Follow this execution flow:
 
     1. Parse user description from Input
         If empty: ERROR "No feature description provided"
@@ -113,7 +257,7 @@ Given that feature description, do this:
     7. Identify Key Entities (if data involved)
     8. Return: SUCCESS (spec ready for planning)
 
-6. Write the specification to SPEC_FILE using the template structure:
+7. Write the specification to SPEC_FILE using the template structure:
    - **CRITICAL**: Preserve ALL information from source document - nothing should be lost
    - Replace placeholders with concrete details from user input
    - Preserve section order and headings
@@ -123,7 +267,7 @@ Given that feature description, do this:
      - The feature directory is always a single level under `specs/`
      - Example: `**Input**: https://bytedance.larkoffice.com/wiki/xxx (local copy: [filename.md](../doc_export/file.md))`
 
-7. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+8. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
 
     a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
 
@@ -215,7 +359,14 @@ Given that feature description, do this:
 
     d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-8. Report completion with feature name, spec file path, checklist results, and readiness for the next phase (`/adk:sdd:clarify` or `/adk:sdd:plan`).
+8. **Test Task Generation Workflow Execution**:
+   - First, check if user input contains any test-related descriptions.
+   - If test-related descriptions are found, you **MUST** run the `/adk:sdt:ff` command.
+   - Do not pause or ask the user for permission before doing this.
+   - Do not show **Next Step Guidance** that mentioned in `/adk:sdt:ff`.
+   - If no test-related descriptions are found in user input, skip this step.
+
+9. Report completion with feature name, spec file path, checklist results, and readiness for the next phase (`/adk:sdd:clarify` or `/adk:sdd:plan`).
 
 **NOTE:** The script generates a feature name in YYYYMMDD-description format and initializes the spec file before writing.
 

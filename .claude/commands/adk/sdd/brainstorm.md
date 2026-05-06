@@ -27,6 +27,11 @@ Before the technical proposal is explicitly approved by the user, it is strictly
 - Create files or scaffolding
 - Modify any configuration or feature flags
 This rule applies to all projects, no matter how simple they may seem.
+
+**"Explicitly approved" means ONLY when the user selects "Approved, generate technical proposal" in Step 7.**
+- Confirmations at Steps 1–6 (e.g., "Correct, proceed") do NOT grant any permission to write code.
+- Step 7 approval only authorizes generating the brainstorm output document — it does NOT authorize writing implementation code, nor does it authorize proceeding to specify/plan/implement.
+- After generating the brainstorm document, this command is COMPLETE. Do NOT automatically continue to implementation. Guide the user to manually execute the next command.
 </HARD-GATE>
 
 **Core Principles**:
@@ -145,11 +150,16 @@ Use the AskUserQuestion tool with multi-select (multiSelect: true):
    - Search for `README.md`, `ARCHITECTURE.md`, `docs/` and other files in the current directory or user-specified directory
    - Read system architecture, service partitioning, tech stack, and other information from them
 
-2. **Review Git history**:
+2. **Read compound knowledge assets** (if available):
+   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+   - Based on the manifest's "SDD Command Knowledge Guidance" section for brainstorm phase, load the relevant docs (e.g., arch/patterns.md, references/fixes.md)
+   - Use these assets to enrich project context understanding and inform the brainstorm
+
+3. **Review Git history**:
    - Review the most recent 20 commits for the involved projects
    - Identify recent modification hotspots and understand code evolution trends
 
-3. **If architecture information is not found, ask the user to provide it**:
+4. **If architecture information is not found, ask the user to provide it**:
    Use the AskUserQuestion tool:
    ```markdown
    No system architecture information found in the current context. Please provide the involved services/projects:
@@ -384,6 +394,8 @@ Use AskUserQuestion to confirm:
 |--------|-------------|
 | Approved, generate technical proposal | Proposal confirmed, generate final document |
 | Needs modification | Return to modify (specify what needs to be changed) |
+
+> **CRITICAL**: The options above must contain ONLY these two choices. Do NOT add any option like "Approved and start implementing", "Proceed to coding", or any similar wording that implies implementation. Approval here means generating the brainstorm document only — implementation requires the user to manually trigger a separate command.
 
 ---
 

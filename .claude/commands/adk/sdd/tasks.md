@@ -21,7 +21,9 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 1. **Setup**: Run `node .ttadk/plugins/ttadk/core/resources/scripts/check-prerequisites.js --json` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute.
 
 2. **Load design documents**: Read from FEATURE_DIR:
-    - **Required**: `.ttadk/memory/constitution.md` (guiding principles - ensure task breakdown aligns with these)
+    - **Required**: `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) (guiding principles - ensure task breakdown aligns with these)
+    - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
+    - Based on the manifest's "SDD Command Knowledge Guidance" section for tasks phase, load the relevant docs (e.g., CODING.md, QUALITY.md)
     - **Required**: plan.md (tech stack, libraries, structure), spec.md (user stories with priorities)
     - **Optional**: data-model.md (entities), contracts/ (API endpoints), research.md (decisions), quickstart.md (test scenarios)
     - Note: Not all projects have all documents. Generate tasks based on what's available.
@@ -52,6 +54,9 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
     - Validate task completeness (each user story has all needed tasks, independently testable)
 
 4. **Generate tasks.md**: Use `.ttadk/plugins/ttadk/core/resources/templates/tasks-template.md` as structure, fill with:
+    - **Write-size guardrail**: First write ≤ 150 lines; each subsequent update ≤ 100 lines (measured by newline-delimited line count)
+    - If a single write would exceed the limit, split by complete lines into multiple writes, preserving order
+    - Do not overwrite existing content, do not fail, and do not omit required content
     - Correct feature name from plan.md
     - Phase 1: Setup tasks (project initialization)
     - Phase 2: Foundational tasks (blocking prerequisites for all user stories)

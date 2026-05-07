@@ -1,0 +1,4 @@
+194. [POST] http://localhost:5173/api/chat/sessions => [201] Created
+195. [POST] http://localhost:5173/api/chat/messages/stream => [200] OK
+
+Note: 182 static requests not shown, run with "static" option to see them.

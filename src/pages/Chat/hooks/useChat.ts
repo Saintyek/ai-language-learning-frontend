@@ -3,6 +3,7 @@ import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/inter
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
 import { streamChatMessage, createChatSession, type ChatMessagePayload } from '@/api/chat'
 import { languageOptions } from '@/consts/languages'
+import { useStreamingTTS } from '@/hooks/useStreamingTTS'
 
 interface ChatHookProps {
   langCode: string | undefined
@@ -65,6 +66,9 @@ export default function useChat({
   const messageIdSeedRef = useRef(0)
   const sessionIdRef = useRef<string | null>(initialSessionId ?? null)
   const prevLangCodeRef = useRef<string | undefined>(langCode)
+
+  // 初始化 TTS 播放器
+  const { enqueueAudio } = useStreamingTTS()
 
   // 当 initialSessionId 或 initialMessages 变化时，重置会话状态
   useEffect(() => {
@@ -223,6 +227,10 @@ export default function useChat({
           scenario: scenarioKey,
           language: langCode,
           sessionId: sessionIdRef.current ?? undefined,
+          enableTTS: true,
+          onAudio: (audioBase64: string) => {
+            enqueueAudio(audioBase64)
+          },
           onChunk: chunk => {
             setChats(prev =>
               prev.map(chat =>
@@ -265,7 +273,7 @@ export default function useChat({
         setGenerating(false)
       }
     },
-    [buildRequestMessages, createMessageId, generating, scenarioKey, langCode]
+    [buildRequestMessages, createMessageId, generating, scenarioKey, langCode, enqueueAudio]
   )
 
   const hintPrompts = useMemo(

@@ -1,0 +1,163 @@
+openapi: 3.0.3
+info:
+  title: Streaming TTS API
+  description: 流式语音合成 API 接口定义
+  version: 1.0.0
+
+paths:
+  /api/chat/stream:
+    post:
+      summary: 流式聊天（带 TTS 音频）
+      description: |
+        发送聊天消息，流式返回文本和音频。
+
+        SSE 事件格式：
+        - `delta`: 文本片段
+        - `audio`: 音频数据（base64）
+        - `done`: 完成
+        - `error`: 错误
+      operationId: streamChatWithTTS
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatStreamRequest'
+      responses:
+        '200':
+          description: SSE 流式响应
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  SSE 事件流，包含以下事件类型：
+
+                  ```
+                  event: delta
+                  data: {"content": "文本片段"}
+
+                  event: audio
+                  data: {"audio": "base64音频数据"}
+
+                  event: done
+                  data: {}
+
+                  event: error
+                  data: {"message": "错误信息"}
+                  ```
+
+components:
+  schemas:
+    ChatStreamRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+          description: 对话消息列表
+        sessionId:
+          type: string
+          description: 会话 ID（可选，用于保存对话）
+        scenario:
+          type: string
+          enum:
+            - daily_chat
+            - role_play
+            - topic_discussion
+          description: 场景类型
+        language:
+          type: string
+          enum:
+            - en
+            - ja
+            - ko
+          description: 学习语言
+        enableTTS:
+          type: boolean
+          default: true
+          description: 是否启用 TTS 语音合成
+
+    ChatMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+            - system
+        content:
+          type: string
+          description: 消息内容
+
+    TTSStreamRequest:
+      type: object
+      properties:
+        speaker:
+          type: string
+          default: zh_female_vv_uranus_bigtts
+          description: 音色 ID
+        format:
+          type: string
+          enum:
+            - mp3
+          default: mp3
+          description: 音频格式
+        sampleRate:
+          type: integer
+          default: 24000
+          description: 采样率
+
+    SSEEvent:
+      type: object
+      discriminator:
+        propertyName: type
+      properties:
+        type:
+          type: string
+          enum:
+            - delta
+            - audio
+            - done
+            - error
+
+    DeltaEvent:
+      allOf:
+        - $ref: '#/components/schemas/SSEEvent'
+        - type: object
+          properties:
+            content:
+              type: string
+              description: 文本片段
+
+    AudioEvent:
+      allOf:
+        - $ref: '#/components/schemas/SSEEvent'
+        - type: object
+          properties:
+            audio:
+              type: string
+              format: byte
+              description: Base64 编码的音频数据
+
+    DoneEvent:
+      allOf:
+        - $ref: '#/components/schemas/SSEEvent'
+
+    ErrorEvent:
+      allOf:
+        - $ref: '#/components/schemas/SSEEvent'
+        - type: object
+          properties:
+            message:
+              type: string
+              description: 错误信息

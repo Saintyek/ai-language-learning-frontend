@@ -14,6 +14,10 @@ export interface StreamChatParams {
   language?: string
   /** 会话ID，如果传了则会保存消息到该会话 */
   sessionId?: string
+  /** 是否启用 TTS 语音合成 */
+  enableTTS?: boolean
+  /** TTS 音频回调 */
+  onAudio?: (audioBase64: string) => void
 }
 
 interface StreamEventPayload {
@@ -24,6 +28,8 @@ interface StreamEventPayload {
   message?: string
   error?: string
   done?: boolean
+  audio?: string
+  ttsEnabled?: boolean
 }
 
 const getAuthHeaders = () => {
@@ -66,7 +72,8 @@ const getErrorMessage = (payload: StreamEventPayload | null) => {
 
 const processSSEBuffer = (
   buffer: string,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  onAudio?: (audioBase64: string) => void
 ): { remainingBuffer: string; done: boolean; errorMessage?: string } => {
   const events = buffer.split(/\r?\n\r?\n/)
   const remainingBuffer = events.pop() ?? ''
@@ -118,6 +125,12 @@ const processSSEBuffer = (
     }
 
     if (eventName === 'start') {
+      continue
+    }
+
+    // 处理音频事件
+    if (eventName === 'audio' && payload?.audio && onAudio) {
+      onAudio(payload.audio)
       continue
     }
 
@@ -334,11 +347,13 @@ export const streamChatMessage = async ({
   scenario,
   language,
   sessionId,
+  enableTTS,
+  onAudio,
 }: StreamChatParams): Promise<void> => {
   const response = await fetch(`${getApiBaseUrl()}/api/chat/messages/stream`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ messages, scenario, language, sessionId }),
+    body: JSON.stringify({ messages, scenario, language, sessionId, enableTTS }),
     signal,
   })
 
@@ -362,9 +377,7 @@ export const streamChatMessage = async ({
   const contentType = response.headers.get('content-type') ?? ''
   const reader = response.body.getReader()
   const decoder = new TextDecoder('utf-8')
-  const processBuffer = contentType.includes('text/event-stream')
-    ? processSSEBuffer
-    : processNDJSONBuffer
+  const isSSE = contentType.includes('text/event-stream')
 
   let buffer = ''
 
@@ -373,7 +386,9 @@ export const streamChatMessage = async ({
     if (done) break
 
     buffer += decoder.decode(value, { stream: true })
-    const result = processBuffer(buffer, onChunk)
+    const result = isSSE
+      ? processSSEBuffer(buffer, onChunk, onAudio)
+      : processNDJSONBuffer(buffer, onChunk)
     buffer = result.remainingBuffer
 
     if (result.errorMessage) {
@@ -387,7 +402,9 @@ export const streamChatMessage = async ({
 
   buffer += decoder.decode()
   if (buffer.trim()) {
-    const result = processBuffer(buffer + '\n\n', onChunk)
+    const result = isSSE
+      ? processSSEBuffer(buffer + '\n\n', onChunk, onAudio)
+      : processNDJSONBuffer(buffer + '\n\n', onChunk)
     if (result.errorMessage) {
       throw new Error(result.errorMessage)
     }

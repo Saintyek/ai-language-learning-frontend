@@ -1,0 +1,12 @@
+{
+  "code": 0,
+  "msg": null,
+  "data": {
+    "case_url": {
+      "caseId": 14162721,
+      "caseGenerateId": 247298,
+      "BaseResp": null
+    },
+    "case_detail_url": "https://bits.bytedance.net/devops/310499123202/quality/case/caseDetail/14162721"
+  }
+}

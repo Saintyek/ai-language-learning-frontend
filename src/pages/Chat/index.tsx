@@ -120,6 +120,7 @@ const Chat: React.FC = () => {
               roleConfig={chat.roleConfig}
               hintPrompts={chat.hintPrompts}
               languageLabel={chat.languageLabel}
+              langCode={langCode}
               onHintClick={chat.handleSubmitText}
               loading={loadingSession}
             />

@@ -17,6 +17,8 @@ interface ChatDialogAreaProps {
   }
   hintPrompts: string[]
   languageLabel: string
+  /** 当前学习语言代码，用于确定翻译目标语言 */
+  langCode: string | undefined
   onHintClick: (hint: string) => void
   loading?: boolean
 }
@@ -30,6 +32,7 @@ export const ChatDialogArea: React.FC<ChatDialogAreaProps> = ({
   roleConfig,
   hintPrompts,
   languageLabel,
+  langCode,
   onHintClick,
   loading,
 }) => {
@@ -172,7 +175,7 @@ export const ChatDialogArea: React.FC<ChatDialogAreaProps> = ({
       </div>
 
       {/* 翻译 Modal */}
-      <TranslateModal selection={selection} onClose={clearSelection} />
+      <TranslateModal selection={selection} langCode={langCode} onClose={clearSelection} />
     </>
   )
 }

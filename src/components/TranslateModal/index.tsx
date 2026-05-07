@@ -8,14 +8,28 @@ import type { TranslateResponse } from '../../api/translate'
 
 export interface TranslateModalProps {
   selection: SmartSelection | null
+  /** 当前学习语言代码，用于确定翻译目标语言 */
+  langCode: string | undefined
   onClose: () => void
+}
+
+/**
+ * 根据当前学习语言确定翻译目标语言
+ * - 中文学习：翻译为英文
+ * - 其他语言（日语、西班牙语、英语）：翻译为中文
+ */
+const getTargetLanguage = (langCode: string | undefined): 'zh' | 'en' => {
+  if (langCode === 'cn') {
+    return 'en'
+  }
+  return 'zh'
 }
 
 /**
  * 翻译弹窗组件
  * 使用 Modal 在页面正中央展示翻译结果
  */
-export const TranslateModal: React.FC<TranslateModalProps> = ({ selection, onClose }) => {
+export const TranslateModal: React.FC<TranslateModalProps> = ({ selection, langCode, onClose }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<TranslateResponse | null>(null)
@@ -74,7 +88,8 @@ export const TranslateModal: React.FC<TranslateModalProps> = ({ selection, onClo
     setError(null)
     setLoading(true)
 
-    translateText({ text: selection.text })
+    const targetLanguage = getTargetLanguage(langCode)
+    translateText({ text: selection.text, targetLanguage })
       .then(response => {
         if (!abortController.signal.aborted) {
           setResult(response)
@@ -93,7 +108,7 @@ export const TranslateModal: React.FC<TranslateModalProps> = ({ selection, onClo
         abortControllerRef.current.abort()
       }
     }
-  }, [selection])
+  }, [selection, langCode])
 
   // 清理语音
   useEffect(() => {

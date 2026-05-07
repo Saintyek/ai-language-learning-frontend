@@ -171,6 +171,8 @@ export default function useSceneSelection(
     if (!containerRef.current) return
 
     const observer = new ResizeObserver(entries => {
+      // 确保组件已挂载后再更新状态
+      if (!isMountedRef.current) return
       for (const entry of entries) {
         setContainerWidth(entry.contentRect.width)
       }

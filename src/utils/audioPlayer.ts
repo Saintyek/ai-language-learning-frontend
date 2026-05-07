@@ -34,6 +34,10 @@ export class StreamingAudioPlayer {
   private scheduledSources: AudioBufferSourceNode[] = [] // 已调度的音频源
   private lastSourceEndTime = 0 // 最后一个音频的结束时间
 
+  // 防止竞态条件：待处理的 base64 音频队列和正在处理的标志
+  private pendingBase64Queue: string[] = []
+  private isProcessingQueue = false
+
   constructor() {
     this.initAudioContext()
   }
@@ -45,32 +49,61 @@ export class StreamingAudioPlayer {
   }
 
   /**
-   * 添加音频片段到队列
+   * 添加音频片段到队列（线程安全）
    */
   async enqueue(base64Audio: string): Promise<void> {
     if (this.isDestroyed) return
 
+    // 将音频加入待处理队列
+    this.pendingBase64Queue.push(base64Audio)
+
+    // 如果已经在处理队列，直接返回（新的音频会被后续处理）
+    if (this.isProcessingQueue) {
+      return
+    }
+
+    // 开始处理队列
+    await this.processQueue()
+  }
+
+  /**
+   * 处理待解码的音频队列（串行处理，避免竞态条件）
+   */
+  private async processQueue(): Promise<void> {
+    if (this.isProcessingQueue) return
+
+    this.isProcessingQueue = true
     this.initAudioContext()
 
     try {
-      const audioBuffer = await this.decodeBase64Audio(base64Audio)
-      this.audioQueue.push(audioBuffer)
+      // 串行处理所有待解码的音频
+      while (this.pendingBase64Queue.length > 0) {
+        const base64Audio = this.pendingBase64Queue.shift()!
 
-      // 如果有等待定时器，取消它（有新音频进来了）
-      if (this.waitTimer) {
-        clearTimeout(this.waitTimer)
-        this.waitTimer = null
-      }
+        try {
+          const audioBuffer = await this.decodeBase64Audio(base64Audio)
+          this.audioQueue.push(audioBuffer)
 
-      // 如果状态是 idle，自动开始播放
-      if (this.status === 'idle') {
-        this.play()
-      } else if (this.status === 'playing') {
-        // 如果正在播放，调度新加入的音频
-        this.scheduleAudio(audioBuffer)
+          // 如果有等待定时器，取消它（有新音频进来了）
+          if (this.waitTimer) {
+            clearTimeout(this.waitTimer)
+            this.waitTimer = null
+          }
+
+          // 根据当前状态处理音频
+          if (this.status === 'idle') {
+            // 状态是 idle，开始播放（这会调度队列中的所有音频）
+            this.play()
+          } else if (this.status === 'playing') {
+            // 状态已经是 playing，直接调度新加入的音频
+            this.scheduleAudio(audioBuffer)
+          }
+        } catch (error) {
+          console.error('[AudioPlayer] Failed to decode audio:', error)
+        }
       }
-    } catch (error) {
-      console.error('[AudioPlayer] Failed to enqueue audio:', error)
+    } finally {
+      this.isProcessingQueue = false
     }
   }
 
@@ -113,6 +146,8 @@ export class StreamingAudioPlayer {
       clearTimeout(this.waitTimer)
       this.waitTimer = null
     }
+    // 清空待处理队列
+    this.pendingBase64Queue = []
     this.status = 'stopped'
     this.stopAllSources()
     this.audioQueue = []
@@ -193,7 +228,7 @@ export class StreamingAudioPlayer {
     // 保存已调度的音频源
     this.scheduledSources.push(source)
 
-    // 设置结束回调（只对最后一个设置）
+    // 设置结束回调
     source.onended = () => {
       // 从已调度列表中移除
       const index = this.scheduledSources.indexOf(source)

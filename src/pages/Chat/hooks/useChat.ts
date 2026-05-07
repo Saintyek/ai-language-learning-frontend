@@ -73,6 +73,18 @@ export default function useChat({
   // 当 initialSessionId 或 initialMessages 变化时，重置会话状态
   useEffect(() => {
     sessionIdRef.current = initialSessionId ?? null
+    // 调试：检查 initialMessages 的内容类型
+    if (initialMessages && initialMessages.length > 0) {
+      console.log('[useChat] Setting initial messages:', {
+        count: initialMessages.length,
+        types: initialMessages.map(m => ({
+          role: m.role,
+          contentType: typeof m.content,
+          isPromise: m.content instanceof Promise,
+          content: typeof m.content === 'string' ? m.content.substring(0, 50) : m.content,
+        })),
+      })
+    }
     setChats(initialMessages ?? [])
     prevLangCodeRef.current = langCode
   }, [initialSessionId, initialMessages])

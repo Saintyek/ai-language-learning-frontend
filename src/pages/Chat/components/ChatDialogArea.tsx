@@ -142,6 +142,23 @@ export const ChatDialogArea: React.FC<ChatDialogAreaProps> = ({
         ref={containerRef}
         className="chat-shell__dialogue flex-1 min-h-0 overflow-hidden px-3 pt-3"
       >
+        {/* 调试：检查 chats 内容类型 */}
+        {(() => {
+          const problemChats = chats.filter(c => typeof c.content !== 'string')
+          if (problemChats.length > 0) {
+            console.error('[ChatDialogArea] Found non-string content!', {
+              count: problemChats.length,
+              details: problemChats.map(c => ({
+                id: c.id,
+                role: c.role,
+                contentType: typeof c.content,
+                isPromise: c.content instanceof Promise,
+                content: c.content,
+              })),
+            })
+          }
+          return null
+        })()}
         <AIChatDialogue
           chats={chats}
           roleConfig={roleConfig}

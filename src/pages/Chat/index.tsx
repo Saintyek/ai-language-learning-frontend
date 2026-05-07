@@ -40,6 +40,19 @@ const Chat: React.FC = () => {
             createdAt: new Date(msg.createdAt).getTime(),
             status: 'completed' as const,
           }))
+          // 调试：检查加载的消息
+          console.log('[Chat] Loaded session history:', {
+            sessionId: sid,
+            messageCount: messages.length,
+            messages: messages.map(m => ({
+              id: m.id,
+              role: m.role,
+              contentType: typeof m.content,
+              isPromise: m.content instanceof Promise,
+              contentPreview:
+                typeof m.content === 'string' ? m.content.substring(0, 100) : m.content,
+            })),
+          })
           setInitialMessages(messages)
         }
         // 设置场景值：从会话的 scenario 字段恢复场景选择

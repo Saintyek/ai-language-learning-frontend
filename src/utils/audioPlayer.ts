@@ -1,6 +1,6 @@
 /**
  * 流式音频播放器
- * 支持流式 MP3 播放，维护音频队列，支持播放控制
+ * 支持流式 MP3 无缝播放，维护音频队列，使用 Web Audio API 调度消除片段间隙
  */
 
 export type PlayerStatus = 'idle' | 'playing' | 'paused' | 'stopped'
@@ -23,14 +23,16 @@ export interface StreamingPlayerState {
 export class StreamingAudioPlayer {
   private audioContext: AudioContext | null = null
   private audioQueue: AudioBuffer[] = []
-  private currentSource: AudioBufferSourceNode | null = null
   private status: PlayerStatus = 'idle'
   private currentSequence = 0
-  private startTime = 0
-  private pauseTime = 0
   private isDestroyed = false
   private waitTimer: ReturnType<typeof setTimeout> | null = null
   private readonly WAIT_TIMEOUT = 3000 // 等待 3 秒
+
+  // 无缝播放相关
+  private nextStartTime = 0 // 下一个音频片段的开始时间
+  private scheduledSources: AudioBufferSourceNode[] = [] // 已调度的音频源
+  private lastSourceEndTime = 0 // 最后一个音频的结束时间
 
   constructor() {
     this.initAudioContext()
@@ -53,27 +55,22 @@ export class StreamingAudioPlayer {
     try {
       const audioBuffer = await this.decodeBase64Audio(base64Audio)
       this.audioQueue.push(audioBuffer)
-      console.log(
-        '[AudioPlayer] Enqueued audio, queue length:',
-        this.audioQueue.length,
-        'status:',
-        this.status
-      )
 
       // 如果有等待定时器，取消它（有新音频进来了）
       if (this.waitTimer) {
-        console.log('[AudioPlayer] Cancelling wait timer, new audio arrived')
         clearTimeout(this.waitTimer)
         this.waitTimer = null
       }
 
       // 如果状态是 idle，自动开始播放
       if (this.status === 'idle') {
-        console.log('[AudioPlayer] Auto-starting playback')
         this.play()
+      } else if (this.status === 'playing') {
+        // 如果正在播放，调度新加入的音频
+        this.scheduleAudio(audioBuffer)
       }
     } catch (error) {
-      console.error('Failed to enqueue audio:', error)
+      console.error('[AudioPlayer] Failed to enqueue audio:', error)
     }
   }
 
@@ -84,13 +81,15 @@ export class StreamingAudioPlayer {
     if (this.isDestroyed) return
 
     if (this.status === 'paused') {
-      // 从暂停恢复
+      // 从暂停恢复 - 需要重新调度
       this.status = 'playing'
-      this.playNext()
+      this.rescheduleAll()
     } else if (this.status === 'idle' || this.status === 'stopped') {
       // 开始新播放
       this.status = 'playing'
-      this.playNext()
+      // 初始化开始时间为当前时间
+      this.nextStartTime = this.audioContext?.currentTime ?? 0
+      this.scheduleAllPending()
     }
   }
 
@@ -101,11 +100,8 @@ export class StreamingAudioPlayer {
     if (this.status !== 'playing') return
 
     this.status = 'paused'
-    if (this.currentSource) {
-      this.currentSource.stop()
-      this.pauseTime = this.audioContext?.currentTime ?? 0
-      this.currentSource = null
-    }
+    // 停止所有已调度的音频
+    this.stopAllSources()
   }
 
   /**
@@ -118,14 +114,11 @@ export class StreamingAudioPlayer {
       this.waitTimer = null
     }
     this.status = 'stopped'
-    if (this.currentSource) {
-      this.currentSource.stop()
-      this.currentSource = null
-    }
+    this.stopAllSources()
     this.audioQueue = []
     this.currentSequence = 0
-    this.startTime = 0
-    this.pauseTime = 0
+    this.nextStartTime = 0
+    this.lastSourceEndTime = 0
   }
 
   /**
@@ -173,54 +166,112 @@ export class StreamingAudioPlayer {
   }
 
   /**
-   * 播放下一个音频片段
+   * 调度单个音频片段
    */
-  private playNext(): void {
-    console.log(
-      '[AudioPlayer] playNext called, status:',
-      this.status,
-      'queue length:',
-      this.audioQueue.length
-    )
+  private scheduleAudio(audioBuffer: AudioBuffer): void {
+    if (!this.audioContext || this.status !== 'playing') return
 
-    if (this.status !== 'playing' || !this.audioContext) {
-      return
+    const currentTime = this.audioContext.currentTime
+
+    // 如果下一个开始时间已经过去，从当前时间开始
+    if (this.nextStartTime < currentTime) {
+      this.nextStartTime = currentTime
     }
 
-    if (this.audioQueue.length === 0) {
-      // 队列为空，但可能还有音频在传输中，等待一段时间
-      console.log('[AudioPlayer] Queue empty, waiting for new audio...')
-      this.waitTimer = setTimeout(() => {
-        console.log('[AudioPlayer] Wait timeout, no new audio arrived, stopping')
-        this.waitTimer = null
-        if (this.status === 'playing') {
-          this.status = 'idle'
-        }
-      }, this.WAIT_TIMEOUT)
-      return
+    const source = this.audioContext.createBufferSource()
+    source.buffer = audioBuffer
+    source.connect(this.audioContext.destination)
+
+    // 使用精确的开始时间实现无缝播放
+    const startTime = this.nextStartTime
+    source.start(startTime)
+
+    // 更新下一个开始时间
+    this.nextStartTime = startTime + audioBuffer.duration
+    this.lastSourceEndTime = this.nextStartTime
+
+    // 保存已调度的音频源
+    this.scheduledSources.push(source)
+
+    // 设置结束回调（只对最后一个设置）
+    source.onended = () => {
+      // 从已调度列表中移除
+      const index = this.scheduledSources.indexOf(source)
+      if (index > -1) {
+        this.scheduledSources.splice(index, 1)
+      }
+
+      // 如果所有音频都播放完了，检查是否有新音频
+      if (this.scheduledSources.length === 0 && this.audioQueue.length === 0) {
+        this.waitForNewAudio()
+      }
+    }
+  }
+
+  /**
+   * 调度队列中所有待处理的音频
+   */
+  private scheduleAllPending(): void {
+    while (this.audioQueue.length > 0 && this.status === 'playing') {
+      const audioBuffer = this.audioQueue.shift()!
+      this.scheduleAudio(audioBuffer)
     }
 
-    const audioBuffer = this.audioQueue.shift()!
-    console.log(
-      '[AudioPlayer] Playing audio buffer, duration:',
-      audioBuffer.duration.toFixed(2) + 's'
-    )
-
-    this.currentSource = this.audioContext.createBufferSource()
-    this.currentSource.buffer = audioBuffer
-    this.currentSource.connect(this.audioContext.destination)
-
-    this.currentSource.onended = () => {
-      console.log('[AudioPlayer] Audio playback ended, queue length:', this.audioQueue.length)
-      this.currentSequence++
-      this.playNext()
+    // 如果没有音频被调度，等待新音频
+    if (this.scheduledSources.length === 0) {
+      this.waitForNewAudio()
     }
 
     // 恢复 AudioContext（如果被暂停）
-    if (this.audioContext.state === 'suspended') {
+    if (this.audioContext?.state === 'suspended') {
       this.audioContext.resume()
     }
+  }
 
-    this.currentSource.start(0)
+  /**
+   * 重新调度所有音频（从暂停恢复时使用）
+   */
+  private rescheduleAll(): void {
+    // 计算暂停时已播放的时间
+    const currentTime = this.audioContext?.currentTime ?? 0
+    this.nextStartTime = currentTime
+
+    // 重新调度队列中的音频
+    this.scheduleAllPending()
+  }
+
+  /**
+   * 停止所有已调度的音频源
+   */
+  private stopAllSources(): void {
+    for (const source of this.scheduledSources) {
+      try {
+        source.stop()
+      } catch {
+        // 忽略已停止的源
+      }
+    }
+    this.scheduledSources = []
+  }
+
+  /**
+   * 等待新音频
+   */
+  private waitForNewAudio(): void {
+    if (this.waitTimer) {
+      clearTimeout(this.waitTimer)
+    }
+
+    this.waitTimer = setTimeout(() => {
+      this.waitTimer = null
+      // 如果还在播放状态但没有音频，切换到 idle
+      if (
+        this.status === 'playing' &&
+        this.scheduledSources.length === 0 &&
+        this.audioQueue.length === 0
+      ) {
+        this.status = 'idle'
+      }
+    }, this.WAIT_TIMEOUT)
   }
 }

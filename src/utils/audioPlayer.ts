@@ -108,6 +108,19 @@ export class StreamingAudioPlayer {
   }
 
   /**
+   * 调度音频并确保 AudioContext 已恢复
+   */
+  private async scheduleAudioWithResume(audioBuffer: AudioBuffer): Promise<void> {
+    // 如果 AudioContext 被暂停，先恢复
+    if (this.audioContext?.state === 'suspended') {
+      console.log('[AudioPlayer] scheduleAudioWithResume - AudioContext is suspended, resuming...')
+      await this.audioContext.resume()
+      console.log('[AudioPlayer] scheduleAudioWithResume - AudioContext resumed')
+    }
+    this.scheduleAudio(audioBuffer)
+  }
+
+  /**
    * 开始/继续播放
    */
   play(): void {
@@ -207,6 +220,14 @@ export class StreamingAudioPlayer {
     if (!this.audioContext || this.status !== 'playing') return
 
     const currentTime = this.audioContext.currentTime
+    console.log(
+      '[AudioPlayer] scheduleAudio - currentTime:',
+      currentTime,
+      'audioContext.state:',
+      this.audioContext.state,
+      'bufferDuration:',
+      audioBuffer.duration
+    )
 
     // 如果下一个开始时间已经过去，从当前时间开始
     if (this.nextStartTime < currentTime) {
@@ -220,6 +241,12 @@ export class StreamingAudioPlayer {
     // 使用精确的开始时间实现无缝播放
     const startTime = this.nextStartTime
     source.start(startTime)
+    console.log(
+      '[AudioPlayer] Audio scheduled to start at:',
+      startTime,
+      'end at:',
+      startTime + audioBuffer.duration
+    )
 
     // 更新下一个开始时间
     this.nextStartTime = startTime + audioBuffer.duration
@@ -227,17 +254,26 @@ export class StreamingAudioPlayer {
 
     // 保存已调度的音频源
     this.scheduledSources.push(source)
+    console.log('[AudioPlayer] scheduledSources count:', this.scheduledSources.length)
 
     // 设置结束回调
     source.onended = () => {
+      console.log('[AudioPlayer] onended callback triggered')
       // 从已调度列表中移除
       const index = this.scheduledSources.indexOf(source)
       if (index > -1) {
         this.scheduledSources.splice(index, 1)
       }
+      console.log(
+        '[AudioPlayer] After removal - scheduledSources:',
+        this.scheduledSources.length,
+        'audioQueue:',
+        this.audioQueue.length
+      )
 
       // 如果所有音频都播放完了，检查是否有新音频
       if (this.scheduledSources.length === 0 && this.audioQueue.length === 0) {
+        console.log('[AudioPlayer] All audio finished, calling waitForNewAudio')
         this.waitForNewAudio()
       }
     }
@@ -246,7 +282,14 @@ export class StreamingAudioPlayer {
   /**
    * 调度队列中所有待处理的音频
    */
-  private scheduleAllPending(): void {
+  private async scheduleAllPending(): Promise<void> {
+    // 恢复 AudioContext（如果被暂停）- 必须在调度音频之前
+    if (this.audioContext?.state === 'suspended') {
+      console.log('[AudioPlayer] AudioContext is suspended, resuming...')
+      await this.audioContext.resume()
+      console.log('[AudioPlayer] AudioContext resumed, state:', this.audioContext.state)
+    }
+
     while (this.audioQueue.length > 0 && this.status === 'playing') {
       const audioBuffer = this.audioQueue.shift()!
       this.scheduleAudio(audioBuffer)
@@ -255,11 +298,6 @@ export class StreamingAudioPlayer {
     // 如果没有音频被调度，等待新音频
     if (this.scheduledSources.length === 0) {
       this.waitForNewAudio()
-    }
-
-    // 恢复 AudioContext（如果被暂停）
-    if (this.audioContext?.state === 'suspended') {
-      this.audioContext.resume()
     }
   }
 
@@ -293,11 +331,17 @@ export class StreamingAudioPlayer {
    * 等待新音频
    */
   private waitForNewAudio(): void {
+    console.log('[AudioPlayer] waitForNewAudio called, current waitTimer:', !!this.waitTimer)
     if (this.waitTimer) {
       clearTimeout(this.waitTimer)
     }
 
     this.waitTimer = setTimeout(() => {
+      console.log('[AudioPlayer] waitTimer fired, checking status:', {
+        status: this.status,
+        scheduledSources: this.scheduledSources.length,
+        audioQueue: this.audioQueue.length,
+      })
       this.waitTimer = null
       // 如果还在播放状态但没有音频，切换到 idle
       if (
@@ -305,6 +349,7 @@ export class StreamingAudioPlayer {
         this.scheduledSources.length === 0 &&
         this.audioQueue.length === 0
       ) {
+        console.log('[AudioPlayer] Setting status to idle')
         this.status = 'idle'
       }
     }, this.WAIT_TIMEOUT)

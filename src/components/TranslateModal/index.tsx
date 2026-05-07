@@ -3,6 +3,8 @@ import { Modal, Spin, Button } from '@douyinfe/semi-ui'
 import { IconPlay, IconCopy } from '@douyinfe/semi-icons'
 import { Toast } from '@douyinfe/semi-ui'
 import { translateText } from '../../api/translate'
+import { fetchTTS } from '../../api/tts'
+import { StreamingAudioPlayer } from '../../utils/audioPlayer'
 import type { SmartSelection } from '../../hooks/useSmartSelection'
 import type { TranslateResponse } from '../../api/translate'
 
@@ -35,27 +37,115 @@ export const TranslateModal: React.FC<TranslateModalProps> = ({ selection, langC
   const [result, setResult] = useState<TranslateResponse | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const playerRef = useRef<StreamingAudioPlayer | null>(null)
 
-  // 播放发音功能
-  const handlePlay = () => {
-    if (isPlaying && utteranceRef.current) {
-      window.speechSynthesis.cancel()
+  // 初始化音频播放器
+  useEffect(() => {
+    playerRef.current = new StreamingAudioPlayer()
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.destroy()
+        playerRef.current = null
+      }
+    }
+  }, [])
+
+  // 播放 TTS 音频
+  const playTTSAudio = async (text: string): Promise<void> => {
+    console.log('[TranslateModal] playTTSAudio called with text:', text)
+    if (!playerRef.current) {
+      console.log('[TranslateModal] playerRef.current is null')
+      return
+    }
+
+    const audioChunks = await fetchTTS(text, langCode)
+    console.log('[TranslateModal] fetchTTS returned', audioChunks.length, 'chunks')
+    for (const chunk of audioChunks) {
+      await playerRef.current.enqueue(chunk)
+    }
+    console.log('[TranslateModal] All chunks enqueued')
+  }
+
+  // 播放发音功能：先播放翻译，间隔1秒后播放例句
+  const handlePlay = async () => {
+    console.log('[TranslateModal] handlePlay called, isPlaying:', isPlaying)
+    if (isPlaying) {
+      playerRef.current?.stop()
       setIsPlaying(false)
       return
     }
 
     if (!result?.translation) return
 
-    const utterance = new SpeechSynthesisUtterance(result.translation)
-    utterance.lang = 'zh-CN'
-    utterance.rate = 0.9
-    utterance.onstart = () => setIsPlaying(true)
-    utterance.onend = () => setIsPlaying(false)
-    utterance.onerror = () => setIsPlaying(false)
+    setIsPlaying(true)
 
-    utteranceRef.current = utterance
-    window.speechSynthesis.speak(utterance)
+    try {
+      console.log('[TranslateModal] Starting playback for translation:', result.translation)
+      // 播放翻译音频
+      await playTTSAudio(result.translation)
+      console.log('[TranslateModal] playTTSAudio finished, waiting for playback complete')
+
+      // 等待播放完成（通过检查播放器状态）
+      await waitForPlaybackComplete()
+      console.log('[TranslateModal] waitForPlaybackComplete finished')
+
+      // 如果有例句，间隔1秒后播放例句
+      if (result.example?.sentence) {
+        console.log('[TranslateModal] Waiting 1 second before playing example sentence')
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('[TranslateModal] Playing example sentence:', result.example.sentence)
+        await playTTSAudio(result.example.sentence)
+        await waitForPlaybackComplete()
+        console.log('[TranslateModal] Example sentence playback finished')
+      }
+    } catch (err) {
+      console.error('TTS error:', err)
+      Toast.error('语音合成失败')
+    } finally {
+      console.log('[TranslateModal] Setting isPlaying to false')
+      setIsPlaying(false)
+    }
+  }
+
+  // 等待播放完成
+  const waitForPlaybackComplete = (): Promise<void> => {
+    return new Promise(resolve => {
+      let hasStartedPlaying = false
+      let checkCount = 0
+
+      const checkStatus = () => {
+        checkCount++
+        const state = playerRef.current?.getState()
+        console.log(`[TranslateModal] checkStatus #${checkCount}:`, state?.status)
+
+        // 首先等待播放器开始播放
+        if (!hasStartedPlaying) {
+          if (state?.status === 'playing') {
+            console.log('[TranslateModal] Player started playing')
+            hasStartedPlaying = true
+          } else if (state?.status === 'idle' || state?.status === 'stopped') {
+            // 如果播放器从未开始播放就进入了 idle 或 stopped 状态，直接完成
+            console.log('[TranslateModal] Player finished without playing (was idle/stopped)')
+            resolve()
+            return
+          }
+          // 继续等待播放开始
+          setTimeout(checkStatus, 100)
+          return
+        }
+
+        // 播放已经开始，等待播放完成（idle 或 stopped）
+        if (state?.status === 'idle' || state?.status === 'stopped') {
+          console.log('[TranslateModal] Player finished playing')
+          resolve()
+        } else {
+          setTimeout(checkStatus, 100)
+        }
+      }
+
+      // 开始检查
+      setTimeout(checkStatus, 100)
+    })
   }
 
   // 复制功能
@@ -110,19 +200,10 @@ export const TranslateModal: React.FC<TranslateModalProps> = ({ selection, langC
     }
   }, [selection, langCode])
 
-  // 清理语音
-  useEffect(() => {
-    return () => {
-      if (isPlaying) {
-        window.speechSynthesis.cancel()
-      }
-    }
-  }, [isPlaying])
-
   // 关闭时重置状态
   const handleClose = () => {
     if (isPlaying) {
-      window.speechSynthesis.cancel()
+      playerRef.current?.stop()
       setIsPlaying(false)
     }
     onClose()

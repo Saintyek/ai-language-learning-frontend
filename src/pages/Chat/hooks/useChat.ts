@@ -68,7 +68,14 @@ export default function useChat({
   const prevLangCodeRef = useRef<string | undefined>(langCode)
 
   // 初始化 TTS 播放器
-  const { enqueueAudio } = useStreamingTTS()
+  const { enqueueAudio, stop: stopAudio } = useStreamingTTS()
+
+  // 组件卸载时停止音频播放
+  useEffect(() => {
+    return () => {
+      stopAudio()
+    }
+  }, [stopAudio])
 
   // 当 initialSessionId 或 initialMessages 变化时，重置会话状态
   useEffect(() => {

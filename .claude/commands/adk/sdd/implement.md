@@ -59,8 +59,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - **IF EXISTS**: Read contracts/ for API specifications and test requirements
    - **IF EXISTS**: Read research.md for technical decisions and constraints
    - **IF EXISTS**: Read quickstart.md for integration scenarios
-   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-   - Based on the manifest's "SDD Command Knowledge Guidance" section for implement phase, load the relevant docs (e.g., CODING.md, references/config-templates.md, RELIABILITY.md, SECURITY.md)
+   - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
 
 4. Parse tasks.md structure and extract:
    - **Task phases**: Setup, Foundational prerequisites, user-story phases, Polish/Cross-Cutting

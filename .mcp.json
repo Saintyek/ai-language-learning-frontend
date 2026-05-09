@@ -1,5 +1,23 @@
 {
   "mcpServers": {
+    "semi-mcp": {
+      "command": "bunx",
+      "args": [
+        "-y",
+        "--registry=http://bnpm.byted.org/",
+        "@ies/semi-mcp-bytedance"
+      ],
+      "env": {
+        "NPM_CONFIG_REGISTRY": "http://bnpm.byted.org/"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
     "lark-docs": {
       "command": "bunx",
       "args": [
@@ -23,24 +41,6 @@
         "NPM_CONFIG_REGISTRY": "http://bnpm.byted.org/",
         "TIKA_ENV": "office"
       }
-    },
-    "semi-mcp": {
-      "command": "bunx",
-      "args": [
-        "-y",
-        "--registry=http://bnpm.byted.org/",
-        "@ies/semi-mcp-bytedance"
-      ],
-      "env": {
-        "NPM_CONFIG_REGISTRY": "http://bnpm.byted.org/"
-      }
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
     }
   }
 }

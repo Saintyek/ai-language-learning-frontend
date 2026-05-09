@@ -27,8 +27,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
   2.  **Load Core Instructions:**
       - Read `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects).
       - These are your guiding principles. Adhere to them strictly.
-      - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-      - Based on the manifest's "SDD Command Knowledge Guidance" section for ff phase, load the relevant docs (e.g., product-specs/patterns.md, arch/patterns.md, CODING.md)
+      - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
   3.  **Analyze User Request (`$ARGUMENTS`):**
       - If `$ARGUMENTS` contains a URL (e.g., a Lark document), fetch its full content and use that as the primary input.
       - Carefully parse the final text to understand the core feature requirements.
@@ -92,11 +91,13 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
       - Detail the "how": specify which files to create/modify, what classes or functions to add, and any key technical decisions.
       - Adhere to the project's existing architecture and best practices.
       - Fill Technical Context section (mark unknowns as "NEEDS CLARIFICATION")
+      - **Write-size guardrail**: First write ≤ 150 lines; each subsequent update ≤ 100 lines (measured by newline-delimited line count). If a single write would exceed the limit, split by complete lines into multiple writes, preserving order; do not overwrite existing content and do not fail.
 
   4.  **Draft Task Breakdown (`tasks.md`):**
       - Load the `tasks.md`.
       - Break down the implementation plan into a series of small, actionable development tasks.
       - Each task should be a logical, sequential step that a developer can pick up and complete. This must perfectly align with the User Stories defined in the plan.
+      - **Write-size guardrail**: First write ≤ 150 lines; each subsequent update ≤ 100 lines (measured by newline-delimited line count). If a single write would exceed the limit, split by complete lines into multiple writes, preserving order; do not overwrite existing content and do not fail.
 
   ---
 
@@ -122,6 +123,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
   - **Scoped Changes:** Keep all proposed changes tightly focused on the requested feature. Do not introduce unrelated modifications.
   - **Respect Templates:** Preserve the section order and headings of all template files (`spec`, `plan`, `tasks`).
   - **URL Content Fetch**: Use lark-docs mcp to get a lark document content.
+  - **Write-size guardrail**: The limit applies per write/update to each document (measured by line count), not to the document's total length. The first write must be ≤ 150 lines and establish the skeleton plus initial section(s). Each subsequent update must be ≤ 100 lines and add content by section or subsection until the document is complete. If a single operation would exceed the limit, split it into multiple writes by complete lines, preserving original order; do not overwrite existing content, do not fail, and do not omit or over-summarize required content.
 
 ## Next Step Guidance
 

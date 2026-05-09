@@ -151,8 +151,7 @@ Use the AskUserQuestion tool with multi-select (multiSelect: true):
    - Read system architecture, service partitioning, tech stack, and other information from them
 
 2. **Read compound knowledge assets** (if available):
-   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-   - Based on the manifest's "SDD Command Knowledge Guidance" section for brainstorm phase, load the relevant docs (e.g., arch/patterns.md, references/fixes.md)
+   - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
    - Use these assets to enrich project context understanding and inform the brainstorm
 
 3. **Review Git history**:

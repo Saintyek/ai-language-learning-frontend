@@ -25,8 +25,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 2. **Load context**: Read FEATURE_SPEC and `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects). Load IMPL_PLAN template (already copied).
 
 3. **Read compound knowledge assets** (if available):
-   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-   - Based on the manifest's "SDD Command Knowledge Guidance" section for plan phase, load the relevant docs (e.g., arch/service-topology.md, arch/patterns.md, SECURITY.md, RELIABILITY.md)
+   - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
    - Use these assets to inform architecture decisions and technology choices
 
 4. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:

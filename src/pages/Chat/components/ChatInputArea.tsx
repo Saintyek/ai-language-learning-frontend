@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react'
-import { IconMicrophoneStroked } from '@douyinfe/semi-icons'
-import { AIChatInput, Toast, Button } from '@douyinfe/semi-ui'
+import { AIChatInput, Toast } from '@douyinfe/semi-ui'
 import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/interface'
 import { SceneSelector } from './SceneSelector'
+import { VoiceRecorder } from '../../../components/VoiceRecorder'
 import type { UseSceneSelectionReturn } from '../hooks/useSceneSelection'
 import type { UseChatReturn } from '../hooks/useChat'
+import type { UseVoiceChatReturn } from '@/hooks/useVoiceChat'
 
 interface ChatInputAreaProps extends Pick<
   UseChatReturn,
@@ -14,6 +15,7 @@ interface ChatInputAreaProps extends Pick<
   sceneDropdownVisible: boolean
   setSceneDropdownVisible: (visible: boolean) => void
   onMessageSend: (text: string) => void
+  voiceChat?: UseVoiceChatReturn
 }
 
 /**
@@ -28,18 +30,12 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   sceneDropdownVisible,
   setSceneDropdownVisible,
   onMessageSend,
+  voiceChat,
 }) => {
   const handleMessageSend = ({ inputContents }: { inputContents: Content[] }) => {
     const text = extractPlainText(inputContents)
     onMessageSend(text)
   }
-
-  const handleVoiceButtonClick = useCallback(() => {
-    Toast.info({
-      content: '语音功能开发中',
-      duration: 2,
-    })
-  }, [])
 
   const renderActionArea = useCallback(
     ({ menuItem }: { menuItem: React.ReactNode[] }) => {
@@ -47,22 +43,23 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
 
       return (
         <div>
-          <Button
-            type="tertiary"
-            theme="borderless"
-            onClick={handleVoiceButtonClick}
-            icon={<IconMicrophoneStroked />}
-            style={{
-              borderRadius: '50%',
-              marginRight: 4,
-            }}
+          <VoiceRecorder
+            onTextReady={onMessageSend}
+            disabled={generating}
+            sendAudio={voiceChat?.sendAudio}
+            isConnected={voiceChat?.isConnected}
+            isConnecting={voiceChat?.isConnecting}
+            onStartSession={voiceChat?.startVoiceSession}
+            onStopRecording={voiceChat?.stopRecording}
+            onEndSession={voiceChat?.endVoiceSession}
+            asrInterimText={voiceChat?.asrInterimText}
+            asrFinalText={voiceChat?.asrFinalText}
           />
-
           {sendButton}
         </div>
       )
     },
-    [handleVoiceButtonClick]
+    [onMessageSend, generating, voiceChat]
   )
 
   return (

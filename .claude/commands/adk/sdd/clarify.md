@@ -66,8 +66,7 @@ Execution steps:
 
 2. Load guiding principles and current spec:
    - Read `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) - consider these principles when evaluating clarification impact
-   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-   - Based on the manifest's "SDD Command Knowledge Guidance" section for clarify phase (same as the phase of the artifact being clarified), load the relevant docs to maintain knowledge consistency
+   - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
    - Load the current spec file
    - Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
 

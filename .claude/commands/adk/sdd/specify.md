@@ -222,8 +222,7 @@ Given that feature description, do this:
 3. **Load guiding principles**: Read `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) and apply these principles when generating the specification.
 
 4. **Read compound knowledge assets** (if available):
-   - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-   - Based on the manifest's "SDD Command Knowledge Guidance" section for specify phase, load the relevant docs (e.g., product-specs/patterns.md, QUALITY.md)
+   - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
    - Use these assets to inform requirement analysis and avoid duplicating established patterns
 
 5. Load `.ttadk/plugins/ttadk/core/resources/templates/spec-template.md` to understand required sections.
@@ -376,7 +375,7 @@ Given that feature description, do this:
 - **CRITICAL - Completeness Guarantee**: spec.md MUST be a superset of user input. If any information exists in user input, it MUST be findable in spec.md. This applies to every line, every reference (code blocks, images, local files), and every detail. After generation, verify: for any content in user input, you can locate its corresponding entry in spec.md.
 - Technical implementation details are REQUIRED in each user story
 - **Local references**: Preserve references from user input (images, files, etc.) with adjusted paths valid from spec.md location. Read referenced content to understand context, but keep reference format rather than forcing inline embedding.
-- **Write-size guardrail**: The limit applies per write/update to spec.md (measured by line count), not to the document’s total length. The first write must be ≤ 150 lines and establish the skeleton plus initial section(s). Each subsequent update must be ≤ 100 lines and add content by section or subsection until the document is complete. If a single operation would exceed the limit, split it into multiple writes by complete lines, preserving original order; do not overwrite existing content, do not fail, and do not omit or over-summarize required content.
+- **Write-size guardrail**: The limit applies per write/update to spec.md (measured by line count), not to the document's total length. The first write must be ≤ 150 lines and establish the skeleton plus initial section(s). Each subsequent update must be ≤ 100 lines and add content by section or subsection until the document is complete. If a single operation would exceed the limit, split it into multiple writes by complete lines, preserving original order; do not overwrite existing content, do not fail, and do not omit or over-summarize required content.
 
 ### Section Requirements
 

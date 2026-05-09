@@ -5,9 +5,11 @@ import 'flag-icons/css/flag-icons.min.css'
 import useChat from './hooks/useChat'
 import useSceneSelection from './hooks/useSceneSelection'
 import useDigitalHuman from './hooks/useDigitalHuman'
+import { useVoiceChat } from '@/hooks/useVoiceChat'
 import DigitalHumanPanel from './components/DigitalHumanPanel'
 import ChatDialogArea from './components/ChatDialogArea'
 import ChatInputArea from './components/ChatInputArea'
+import { PronunciationAnalysis } from '@/components/PronunciationAnalysis'
 import { getChatSessionDetail, type ChatMessage } from '@/api/chat'
 import { scenarioToValueArray } from '@/utils/scenarioUtils'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
@@ -88,6 +90,11 @@ const Chat: React.FC = () => {
   })
   const { digitalHuman } = useDigitalHuman()
 
+  // 语音聊天集成
+  const voiceChat = useVoiceChat({
+    onSendMessage: chat.handleSubmitText,
+  })
+
   // 自动滚动到底部
   useEffect(() => {
     const chatPanel = chatPanelRef.current
@@ -125,6 +132,13 @@ const Chat: React.FC = () => {
               loading={loadingSession}
             />
 
+            {/* 发音分析结果 */}
+            {voiceChat.pronunciationResult && (
+              <div className="px-4 pb-2">
+                <PronunciationAnalysis result={voiceChat.pronunciationResult} />
+              </div>
+            )}
+
             <ChatInputArea
               generating={chat.generating}
               stopGenerating={chat.stopGenerating}
@@ -134,6 +148,7 @@ const Chat: React.FC = () => {
               sceneDropdownVisible={sceneDropdownVisible}
               setSceneDropdownVisible={setSceneDropdownVisible}
               onMessageSend={chat.handleSubmitText}
+              voiceChat={voiceChat}
             />
           </div>
         </div>

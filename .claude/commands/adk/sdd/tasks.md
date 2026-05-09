@@ -22,8 +22,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
 
 2. **Load design documents**: Read from FEATURE_DIR:
     - **Required**: `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) (guiding principles - ensure task breakdown aligns with these)
-    - **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-    - Based on the manifest's "SDD Command Knowledge Guidance" section for tasks phase, load the relevant docs (e.g., CODING.md, QUALITY.md)
+    - **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
     - **Required**: plan.md (tech stack, libraries, structure), spec.md (user stories with priorities)
     - **Optional**: data-model.md (entities), contracts/ (API endpoints), research.md (decisions), quickstart.md (test scenarios)
     - Note: Not all projects have all documents. Generate tasks based on what's available.

@@ -1,0 +1,65 @@
+/**
+ * 发音分析组件样式
+ * Feature: 20260508-voice-interaction-feature
+ */
+
+.pronunciation-analysis {
+  margin-top: 16px;
+}
+
+.pronunciation-analysis__header {
+  display: flex;
+  align-items: center;
+}
+
+.pronunciation-analysis__score-section {
+  padding: 16px 0;
+  text-align: center;
+}
+
+.pronunciation-analysis__problems {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--semi-color-border);
+}
+
+.pronunciation-analysis__no-problems {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.pronunciation-analysis__problem-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pronunciation-analysis__expected {
+  font-weight: 600;
+}
+
+.pronunciation-analysis__actual {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.pronunciation-analysis__arrow {
+  opacity: 0.5;
+  margin: 0 4px;
+}
+
+.pronunciation-analysis__missing-label,
+.pronunciation-analysis__extra-label {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-left: 4px;
+}
+
+.pronunciation-analysis__suggestion {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: var(--semi-color-tertiary-light-default);
+  border-radius: 8px;
+}

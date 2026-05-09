@@ -72,10 +72,9 @@ Load only the minimal necessary context from each artifact:
 
 - Load `docs/CONSTITUTION.md` (fallback: `.ttadk/memory/constitution.md` for legacy projects) for principle validation
 
-**From knowledge asset manifest (if available):**
+**From available knowledge assets (if available):**
 
-- **IF EXISTS**: Read `docs/arch/index.md` for knowledge asset manifest and SDD command loading guidance
-- Based on the manifest's "SDD Command Knowledge Guidance" section for analyze phase, load the relevant docs (e.g., QUALITY.md, CODING.md)
+- **IF EXISTS**: Scan `docs/` for available knowledge assets (e.g., check `docs/arch/`, `docs/references/`, root-level `docs/*.md`). Load whichever files are relevant to the current task based on their filenames and contents — do not rely on a hardcoded list.
 
 ### 3. Build Semantic Models
 

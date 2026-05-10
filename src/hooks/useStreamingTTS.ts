@@ -28,8 +28,13 @@ export function useStreamingTTS(options: UseStreamingTTSOptions = {}): UseStream
   const [status, setStatus] = useState<PlayerStatus>('idle')
 
   // 初始化播放器：format 变化时重建（一般不会变）
+  // 注入 onStatusChange 回调，让播放器内部状态变更（含自然播放结束→idle）
+  // 实时同步到 React state，外层（如数字人面板）可据此正确切换"说话/空闲"
   useEffect(() => {
-    playerRef.current = new StreamingAudioPlayer({ format })
+    playerRef.current = new StreamingAudioPlayer({
+      format,
+      onStatusChange: nextStatus => setStatus(nextStatus),
+    })
 
     return () => {
       if (playerRef.current) {

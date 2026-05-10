@@ -94,6 +94,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
   const wsRef = useRef<VoiceWebSocketController | null>(null)
   const audioPlayerRef = useRef<StreamingAudioPlayer | null>(null)
   const currentTextRef = useRef('')
+  const previousLanguageRef = useRef(language)
 
   /**
    * 防御性去重锁（2026-05-10 修复 "AI 重复回复两遍"）：
@@ -108,8 +109,19 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
   const endAsrSentRef = useRef(false)
 
   // 初始化音频播放器
+  // 关键：通过 onStatusChange 让 isPlayingTTS 跟随播放器真实状态，
+  //   而非依赖 ws 事件 'tts' / 'tts_ended'。
+  // 原因：'tts_ended' 是后端推送"音频已全部发送"的信号，
+  //   但浏览器侧 PCM 还在解码队列里播放，用事件直接 setIsPlayingTTS(false)
+  //   会导致数字人在 AI 真正讲完前就切回 idle；
+  //   短回复场景下 tts 与 tts_ended 几乎同帧到达，setState 被合并为 false，
+  //   talking 状态会被完全跳过。
   useEffect(() => {
-    audioPlayerRef.current = new StreamingAudioPlayer()
+    audioPlayerRef.current = new StreamingAudioPlayer({
+      onStatusChange: nextStatus => {
+        setIsPlayingTTS(nextStatus === 'playing')
+      },
+    })
     return () => {
       audioPlayerRef.current?.destroy()
       audioPlayerRef.current = null
@@ -124,6 +136,52 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     },
     [onStatusChange]
   )
+
+  /**
+   * 重置实时语音会话状态
+   * 语言切换或主动结束会话时复用，避免旧连接、旧音频和旧 ASR 缓冲残留到新语言。
+   */
+  const resetVoiceSessionState = useCallback(() => {
+    audioPlayerRef.current?.stop()
+    setIsPlayingTTS(false)
+    currentTextRef.current = ''
+    aiRespondingRef.current = false
+    endAsrSentRef.current = false
+    setAiResponseText('')
+    setIsConnecting(false)
+    setIsConnected(false)
+    setSessionPronunciationAnalysisEnabled(null)
+    updateStatus('idle')
+  }, [updateStatus])
+
+  /**
+   * 关闭当前 WebSocket 会话
+   * notifyServer=true 时先通知后端结束会话，再断开连接；语言切换时必须立即清理旧会话。
+   */
+  const closeVoiceSession = useCallback(
+    (notifyServer = true) => {
+      if (notifyServer) {
+        wsRef.current?.sendMessage({ type: 'end_session' })
+      }
+      wsRef.current?.disconnect()
+      wsRef.current = null
+      resetVoiceSessionState()
+    },
+    [resetVoiceSessionState]
+  )
+
+  // 语言切换时关闭旧 Realtime WebSocket，避免继续用旧语言 prompt 录音/回复。
+  useEffect(() => {
+    if (previousLanguageRef.current === language) return
+
+    previousLanguageRef.current = language
+
+    const hasActiveVoiceSession =
+      Boolean(wsRef.current) || isConnected || isConnecting || isPlayingTTS || status !== 'idle'
+    if (!hasActiveVoiceSession) return
+
+    closeVoiceSession()
+  }, [language, isConnected, isConnecting, isPlayingTTS, status, closeVoiceSession])
 
   // 处理 WebSocket 消息
   const handleWSMessage = useCallback(
@@ -165,18 +223,18 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
           break
 
         case 'tts':
-          // TTS 音频数据
+          // TTS 音频数据：仅入队解码，isPlayingTTS 由 player 的 onStatusChange 统一驱动
+          // 不在此处 setIsPlayingTTS(true)，避免与 tts_ended 在同一帧批处理被合并
           console.log('[useVoiceSession] TTS audio received, sequence:', event.sequence)
           aiRespondingRef.current = true
-          setIsPlayingTTS(true)
           audioPlayerRef.current?.enqueue(event.audio)
           break
 
         case 'tts_ended':
-          // TTS 播放结束 = AI 本轮回复完整结束
-          // 把累积好的完整文本回吐给上层（实时语音链路据此把消息落到聊天列表）
-          console.log('[useVoiceSession] TTS ended, finalizing AI response')
-          setIsPlayingTTS(false)
+          // TTS 后端推送"音频已发完"信号
+          // 注意：此时浏览器侧 PCM 通常还在播放队列里，isPlayingTTS 由 player 自然结束时回调置 false
+          // 这里只负责把累积好的完整文本回吐给上层 + 重置去重锁
+          console.log('[useVoiceSession] TTS ended (backend signal), finalizing AI response')
           if (currentTextRef.current) {
             onAiResponseFinalized?.(currentTextRef.current)
           }
@@ -297,15 +355,9 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     setTimeout(() => {
       wsRef.current?.disconnect()
       wsRef.current = null
-      audioPlayerRef.current?.stop()
-      setIsPlayingTTS(false)
-      currentTextRef.current = ''
-      aiRespondingRef.current = false
-      endAsrSentRef.current = false
-      setSessionPronunciationAnalysisEnabled(null)
-      updateStatus('idle')
+      resetVoiceSessionState()
     }, 100)
-  }, [updateStatus])
+  }, [resetVoiceSessionState])
 
   // 停止 TTS 播放
   const stopTTS = useCallback(() => {

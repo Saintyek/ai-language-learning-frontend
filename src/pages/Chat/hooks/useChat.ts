@@ -4,6 +4,7 @@ import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/
 import { streamChatMessage, createChatSession, type ChatMessagePayload } from '@/api/chat'
 import { languageOptions } from '@/consts/languages'
 import { useStreamingTTS } from '@/hooks/useStreamingTTS'
+import type { PlayerStatus } from '@/utils/audioPlayer'
 
 interface ChatHookProps {
   langCode: string | undefined
@@ -34,6 +35,11 @@ export interface UseChatReturn {
     assistant: { name: string; color: string }
   }
   sessionId: string | null
+  /**
+   * TTS 播放器状态：用于上层（如数字人面板）判断是否处于"AI 说话"状态
+   * 仅反映文本聊天链路的 TTS 播放，不包含实时语音链路
+   */
+  ttsStatus: PlayerStatus
   /**
    * 直接追加一条已就绪的消息（不调用任何 LLM/TTS API）
    * 供实时语音链路使用：把语音模型的 ASR 文本和 AI 回复文本直接落到聊天列表
@@ -73,7 +79,13 @@ export default function useChat({
   const prevLangCodeRef = useRef<string | undefined>(langCode)
 
   // 初始化 TTS 播放器（仅文本聊天链路使用，固定 mp3 格式）
-  const { enqueueAudio, flush: flushAudio, stop: stopAudio } = useStreamingTTS({ format: 'mp3' })
+  // 暴露 status 供上层数字人面板订阅"是否在说话"
+  const {
+    enqueueAudio,
+    flush: flushAudio,
+    stop: stopAudio,
+    status: ttsStatus,
+  } = useStreamingTTS({ format: 'mp3' })
 
   // 组件卸载时停止音频播放
   useEffect(() => {
@@ -349,6 +361,7 @@ export default function useChat({
     hintPrompts,
     roleConfig,
     sessionId: sessionIdRef.current,
+    ttsStatus,
     appendCompletedMessage,
   }
 }

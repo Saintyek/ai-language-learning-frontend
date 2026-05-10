@@ -31,6 +31,11 @@ export interface StreamingPlayerState {
 export interface StreamingAudioPlayerOptions {
   /** 音频格式，默认 pcm_s16le_24k（实时语音模型） */
   format?: AudioFormat
+  /**
+   * 播放器状态变化回调
+   * 内部任何 status 变更（包括自然播放结束→idle）都会触发，便于 React 层订阅
+   */
+  onStatusChange?: (status: PlayerStatus) => void
 }
 
 /** 实时 PCM 流的固定参数（与火山 RealtimeAPI tts.audio_config 一致） */
@@ -43,8 +48,10 @@ export class StreamingAudioPlayer {
   private currentSequence = 0
   private isDestroyed = false
   private waitTimer: ReturnType<typeof setTimeout> | null = null
-  private readonly WAIT_TIMEOUT = 3000
+  private readonly WAIT_TIMEOUT = 300
   private readonly format: AudioFormat
+  /** 状态变化回调，由构造函数注入，可选 */
+  private readonly onStatusChange?: (status: PlayerStatus) => void
 
   // 无缝播放相关
   private nextStartTime = 0
@@ -60,7 +67,18 @@ export class StreamingAudioPlayer {
 
   constructor(options: StreamingAudioPlayerOptions = {}) {
     this.format = options.format ?? 'pcm_s16le_24k'
+    this.onStatusChange = options.onStatusChange
     this.initAudioContext()
+  }
+
+  /**
+   * 统一的状态变更入口
+   * 内部所有 status 修改都必须走这里，确保外部回调能感知到（包括自然结束→idle）
+   */
+  private setStatus(next: PlayerStatus): void {
+    if (this.status === next) return
+    this.status = next
+    this.onStatusChange?.(next)
   }
 
   /**
@@ -190,7 +208,7 @@ export class StreamingAudioPlayer {
           // 首次进入 playing：必须先 resume 再取 currentTime 作为 nextStartTime
           // 否则 currentTime 还停在 0，scheduleAudio 会把 startTime 设到过去 → 前几帧被吃
           if (this.status === 'idle' || this.status === 'stopped') {
-            this.status = 'playing'
+            this.setStatus('playing')
             if (this.audioContext?.state === 'suspended') {
               await this.audioContext.resume()
             }
@@ -227,10 +245,10 @@ export class StreamingAudioPlayer {
     if (this.isDestroyed) return
 
     if (this.status === 'paused') {
-      this.status = 'playing'
+      this.setStatus('playing')
       this.rescheduleAll()
     } else if (this.status === 'idle' || this.status === 'stopped') {
-      this.status = 'playing'
+      this.setStatus('playing')
       this.nextStartTime = this.audioContext?.currentTime ?? 0
       this.scheduleAllPending()
     }
@@ -241,7 +259,7 @@ export class StreamingAudioPlayer {
    */
   pause(): void {
     if (this.status !== 'playing') return
-    this.status = 'paused'
+    this.setStatus('paused')
     this.stopAllSources()
   }
 
@@ -255,7 +273,7 @@ export class StreamingAudioPlayer {
     }
     this.pendingBase64Queue = []
     this.mp3ByteChunks = []
-    this.status = 'stopped'
+    this.setStatus('stopped')
     this.stopAllSources()
     this.audioQueue = []
     this.currentSequence = 0
@@ -406,7 +424,8 @@ export class StreamingAudioPlayer {
         this.scheduledSources.length === 0 &&
         this.audioQueue.length === 0
       ) {
-        this.status = 'idle'
+        // 自然播放结束 → 回到 idle，必须走 setStatus 通知外部
+        this.setStatus('idle')
       }
     }, this.WAIT_TIMEOUT)
   }

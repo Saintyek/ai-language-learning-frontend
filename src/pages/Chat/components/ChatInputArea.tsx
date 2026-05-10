@@ -14,6 +14,8 @@ interface ChatInputAreaProps extends Pick<
   UseChatReturn,
   'generating' | 'stopGenerating' | 'extractPlainText' | 'languageLabel'
 > {
+  /** 当前语言代码：语言切换时用于重挂载录音组件，确保本地麦克风采集被清理 */
+  langCode?: string
   sceneSelection: UseSceneSelectionReturn
   sceneDropdownVisible: boolean
   setSceneDropdownVisible: (visible: boolean) => void
@@ -31,6 +33,7 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   stopGenerating,
   extractPlainText,
   languageLabel,
+  langCode,
   sceneSelection,
   sceneDropdownVisible,
   setSceneDropdownVisible,
@@ -63,6 +66,7 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   const voiceControls = (
     <div className="flex flex-col items-center gap-3">
       <VoiceRecorder
+        key={langCode ?? 'unknown'}
         variant="pill"
         disabled={generating}
         sendAudio={voiceChat?.sendAudio}
@@ -98,6 +102,10 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     <div className="chat-shell__composer-wrap shrink-0 px-3 pb-3 pt-2">
       {voiceControlsContainer && createPortal(voiceControls, voiceControlsContainer)}
       <AIChatInput
+        // 以 languageLabel 作为 key：语言切换时强制重挂载组件
+        // 原因：Semi AIChatInput 内部 Tiptap placeholder extension 仅在挂载时读取一次 placeholder
+        // 不会响应 prop 变化，因此必须通过 key 触发重建才能让占位符随语言更新
+        key={languageLabel}
         keepSkillAfterSend={false}
         placeholder={`用${languageLabel}开始对话...`}
         sendHotKey="enter"

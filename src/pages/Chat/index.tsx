@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import 'flag-icons/css/flag-icons.min.css'
 
@@ -88,7 +88,6 @@ const Chat: React.FC = () => {
     initialSessionId: sessionId,
     initialMessages,
   })
-  const { digitalHuman } = useDigitalHuman()
   const voiceScenarioKey =
     sceneSelection.sceneValue.length >= 2
       ? `${sceneSelection.sceneValue[0]}/${sceneSelection.sceneValue[1]}`
@@ -105,6 +104,23 @@ const Chat: React.FC = () => {
     pronunciationAnalysisEnabled,
     onUserTranscript: text => chat.appendCompletedMessage('user', text),
     onAiResponseFinalized: text => chat.appendCompletedMessage('assistant', text),
+  })
+
+  /**
+   * 汇合两条说话信号：
+   *   1. 文本链路：TTS 播放器 status === 'playing'
+   *   2. 实时语音链路：voiceChat.isPlayingTTS
+   * 任一为真即视作 AI 正在说话，驱动数字人切到 talking 状态
+   */
+  const isDigitalHumanSpeaking = useMemo(
+    () => chat.ttsStatus === 'playing' || voiceChat.isPlayingTTS,
+    [chat.ttsStatus, voiceChat.isPlayingTTS]
+  )
+
+  // 数字人状态计算（语言+说话信号 → 视频资源+状态）
+  const { videoSet, state: digitalHumanState } = useDigitalHuman({
+    langCode,
+    isSpeaking: isDigitalHumanSpeaking,
   })
 
   const handlePronunciationAnalysisChange = useCallback(
@@ -131,8 +147,8 @@ const Chat: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧数字人 */}
         <DigitalHumanPanel
-          digitalHuman={digitalHuman}
-          generating={chat.generating}
+          videoSet={videoSet}
+          state={digitalHumanState}
           languageLabel={chat.languageLabel}
         />
 
@@ -157,6 +173,7 @@ const Chat: React.FC = () => {
               stopGenerating={chat.stopGenerating}
               extractPlainText={chat.extractPlainText}
               languageLabel={chat.languageLabel}
+              langCode={langCode}
               sceneSelection={sceneSelection}
               sceneDropdownVisible={sceneDropdownVisible}
               setSceneDropdownVisible={setSceneDropdownVisible}

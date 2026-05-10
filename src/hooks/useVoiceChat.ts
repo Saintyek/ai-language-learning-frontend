@@ -6,7 +6,7 @@
  * 不再触发文本聊天 LLM / TTS 链路（避免与实时语音模型重复回复）。
  */
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVoiceSession } from './useVoiceSession'
 import type { VoiceError } from '../types/voice'
 
@@ -87,6 +87,7 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
   const finalTextRef = useRef('')
   // 记录已经上报过的用户文本，避免同一句话被重复 append
   const lastReportedTranscriptRef = useRef('')
+  const previousLanguageRef = useRef(language)
 
   // 处理 ASR 结果：isFinal 时立刻把用户文本回吐给上层（无需等 endVoiceSession）
   const handleAsrResult = useCallback(
@@ -124,6 +125,22 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
     onAiResponseFinalized: handleAiResponseFinalized,
     onError,
   })
+
+  // 语言切换时复位语音 UI 层状态；底层 WebSocket 由 useVoiceSession 负责关闭。
+  useEffect(() => {
+    if (previousLanguageRef.current === language) return
+
+    previousLanguageRef.current = language
+
+    if (!isInVoiceSession && !isRecordingInput) return
+
+    setIsInVoiceSession(false)
+    setIsRecordingInput(false)
+    setAsrInterimText('')
+    setAsrFinalText('')
+    finalTextRef.current = ''
+    lastReportedTranscriptRef.current = ''
+  }, [language, isInVoiceSession, isRecordingInput])
 
   // 开始语音会话
   const startVoiceSession = useCallback(() => {

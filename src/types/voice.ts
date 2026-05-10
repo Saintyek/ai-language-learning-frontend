@@ -117,6 +117,7 @@ export type VoiceEvent =
 export interface StartSessionEvent {
   type: 'start_session'
   sessionId?: string
+  token?: string
   language?: string
   scenario?: string
 }

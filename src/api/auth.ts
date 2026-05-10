@@ -55,7 +55,7 @@ export const login = async (params: LoginParams): Promise<{ token?: string; user
   const response = await post<ApiResponse<LoginData>>('/api/auth/login', params)
   const { data } = response
   return {
-    token: data.token, // 目前后端未返回 token
+    token: data.token,
     userInfo: {
       id: data.id,
       username: data.username,
@@ -71,7 +71,7 @@ export const register = async (params: RegisterParams): Promise<{ token?: string
   const response = await post<ApiResponse<RegisterData>>('/api/auth/register', params)
   const { data } = response
   return {
-    token: data.token, // 目前后端未返回 token
+    token: data.token,
     userInfo: {
       id: data.id,
       username: data.username,
@@ -85,7 +85,7 @@ export const register = async (params: RegisterParams): Promise<{ token?: string
 // 认证数据过期时间：1天（毫秒）
 const AUTH_EXPIRY_TIME = 24 * 60 * 60 * 1000
 
-// 保存 token 和用户信息到 localStorage
+// 保存 JWT 和用户信息到 localStorage
 export const saveAuthData = (token: string | undefined, userInfo: UserInfo): void => {
   // 保存过期时间
   localStorage.setItem('authExpiry', String(Date.now() + AUTH_EXPIRY_TIME))
@@ -93,10 +93,8 @@ export const saveAuthData = (token: string | undefined, userInfo: UserInfo): voi
   if (token) {
     localStorage.setItem('token', token)
   }
-  // 暂时用用户 ID 作为临时标识（后续后端返回 token 后可移除）
-  if (!token && userInfo.id) {
-    localStorage.setItem('userId', String(userInfo.id))
-  }
+  // JWT 是后端识别真实用户的唯一凭证，清理旧版临时 userId 标识。
+  localStorage.removeItem('userId')
   localStorage.setItem('userInfo', JSON.stringify(userInfo))
 }
 
@@ -153,5 +151,5 @@ export const isAuthenticated = (): boolean => {
     return false
   }
 
-  return !!localStorage.getItem('token') || !!localStorage.getItem('userId')
+  return !!localStorage.getItem('token')
 }

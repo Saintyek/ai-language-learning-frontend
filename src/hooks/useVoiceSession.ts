@@ -251,9 +251,10 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     updateStatus('recording')
 
     // 创建 WebSocket 连接
+    const token = localStorage.getItem('token') ?? undefined
     const wsOptions: VoiceWebSocketOptions = {
       // 会话启动参数需要与文本聊天保持一致，由后端统一注入 prompt。
-      initialMessage: { type: 'start_session', language, scenario },
+      initialMessage: { type: 'start_session', token, language, scenario },
       onMessage: handleWSMessage,
       onError: err => {
         setIsConnecting(false)

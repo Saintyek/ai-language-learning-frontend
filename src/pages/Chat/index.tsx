@@ -91,8 +91,13 @@ const Chat: React.FC = () => {
   const { digitalHuman } = useDigitalHuman()
 
   // 语音聊天集成
+  // 实时语音链路与文本聊天链路解耦：
+  //   - 用户 ASR 文本 → 直接 append 用户消息
+  //   - AI 实时回复完成 → 直接 append 助手消息
+  // 不再调用 chat.handleSubmitText（避免触发 LLM 文本生成 + TTS 二次合成）
   const voiceChat = useVoiceChat({
-    onSendMessage: chat.handleSubmitText,
+    onUserTranscript: text => chat.appendCompletedMessage('user', text),
+    onAiResponseFinalized: text => chat.appendCompletedMessage('assistant', text),
   })
 
   // 自动滚动到底部

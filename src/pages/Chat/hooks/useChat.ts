@@ -34,6 +34,11 @@ export interface UseChatReturn {
     assistant: { name: string; color: string }
   }
   sessionId: string | null
+  /**
+   * 直接追加一条已就绪的消息（不调用任何 LLM/TTS API）
+   * 供实时语音链路使用：把语音模型的 ASR 文本和 AI 回复文本直接落到聊天列表
+   */
+  appendCompletedMessage: (role: 'user' | 'assistant', content: string) => void
 }
 
 const buildChatMessage = ({
@@ -67,8 +72,8 @@ export default function useChat({
   const sessionIdRef = useRef<string | null>(initialSessionId ?? null)
   const prevLangCodeRef = useRef<string | undefined>(langCode)
 
-  // 初始化 TTS 播放器
-  const { enqueueAudio, stop: stopAudio } = useStreamingTTS()
+  // 初始化 TTS 播放器（仅文本聊天链路使用，固定 mp3 格式）
+  const { enqueueAudio, flush: flushAudio, stop: stopAudio } = useStreamingTTS({ format: 'mp3' })
 
   // 组件卸载时停止音频播放
   useEffect(() => {
@@ -259,6 +264,9 @@ export default function useChat({
           },
         })
 
+        // 文本流结束后整体解码 mp3 并播放（mp3 模式必需）
+        await flushAudio()
+
         setChats(prev =>
           prev.map(chat =>
             chat.id === assistantId
@@ -292,7 +300,7 @@ export default function useChat({
         setGenerating(false)
       }
     },
-    [buildRequestMessages, createMessageId, generating, scenarioKey, langCode, enqueueAudio]
+    [buildRequestMessages, createMessageId, generating, scenarioKey, langCode, enqueueAudio, flushAudio]
   )
 
   const hintPrompts = useMemo(
@@ -313,6 +321,27 @@ export default function useChat({
     [languageLabel]
   )
 
+  /**
+   * 直接追加一条已就绪的消息（不调用任何后端 API）
+   * 适用于实时语音链路：避免再次触发 LLM 文本生成与 TTS 合成
+   */
+  const appendCompletedMessage = useCallback(
+    (role: 'user' | 'assistant', content: string) => {
+      const trimmed = content.trim()
+      if (!trimmed) return
+      setChats(prev => [
+        ...prev,
+        buildChatMessage({
+          id: createMessageId(role),
+          role,
+          content: trimmed,
+          status: 'completed',
+        }),
+      ])
+    },
+    [createMessageId]
+  )
+
   return {
     chats,
     generating,
@@ -329,5 +358,6 @@ export default function useChat({
     hintPrompts,
     roleConfig,
     sessionId: sessionIdRef.current,
+    appendCompletedMessage,
   }
 }

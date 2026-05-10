@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { AIChatInput, Toast } from '@douyinfe/semi-ui'
+import { AIChatInput } from '@douyinfe/semi-ui'
 import type { Content } from '@douyinfe/semi-foundation/lib/es/aiChatInput/interface'
 import { SceneSelector } from './SceneSelector'
 import { VoiceRecorder } from '../../../components/VoiceRecorder'
@@ -44,7 +44,6 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
       return (
         <div>
           <VoiceRecorder
-            onTextReady={onMessageSend}
             disabled={generating}
             sendAudio={voiceChat?.sendAudio}
             isConnected={voiceChat?.isConnected}

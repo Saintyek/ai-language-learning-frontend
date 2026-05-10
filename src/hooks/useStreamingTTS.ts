@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { StreamingAudioPlayer } from '../utils/audioPlayer'
-import type { PlayerStatus } from '../utils/audioPlayer'
+import type { AudioFormat, PlayerStatus } from '../utils/audioPlayer'
 
 export interface UseStreamingTTSOptions {
   autoPlay?: boolean
+  /** 音频格式，默认 'mp3'（HTTP TTS 链路） */
+  format?: AudioFormat
 }
 
 export interface UseStreamingTTSReturn {
@@ -12,19 +14,22 @@ export interface UseStreamingTTSReturn {
   pause: () => void
   stop: () => void
   enqueueAudio: (base64Audio: string) => Promise<void>
+  /** 通知本轮音频流接收完毕（mp3 模式必需） */
+  flush: () => Promise<void>
 }
 
 /**
  * TTS 流式播放 Hook
+ * 默认使用 mp3 格式，与后端 HTTP TTS 服务一致
  */
 export function useStreamingTTS(options: UseStreamingTTSOptions = {}): UseStreamingTTSReturn {
-  const { autoPlay = true } = options
+  const { format = 'mp3' } = options
   const playerRef = useRef<StreamingAudioPlayer | null>(null)
   const [status, setStatus] = useState<PlayerStatus>('idle')
 
-  // 初始化播放器
+  // 初始化播放器：format 变化时重建（一般不会变）
   useEffect(() => {
-    playerRef.current = new StreamingAudioPlayer()
+    playerRef.current = new StreamingAudioPlayer({ format })
 
     return () => {
       if (playerRef.current) {
@@ -32,7 +37,7 @@ export function useStreamingTTS(options: UseStreamingTTSOptions = {}): UseStream
         playerRef.current = null
       }
     }
-  }, [])
+  }, [format])
 
   // 播放
   const play = useCallback(() => {
@@ -62,10 +67,15 @@ export function useStreamingTTS(options: UseStreamingTTSOptions = {}): UseStream
   const enqueueAudio = useCallback(async (base64Audio: string) => {
     if (playerRef.current) {
       await playerRef.current.enqueue(base64Audio)
+      setStatus(playerRef.current.getState().status)
+    }
+  }, [])
 
-      // 更新状态
-      const state = playerRef.current.getState()
-      setStatus(state.status)
+  // 通知音频流结束（mp3 模式触发整体解码）
+  const flush = useCallback(async () => {
+    if (playerRef.current) {
+      await playerRef.current.flush()
+      setStatus(playerRef.current.getState().status)
     }
   }, [])
 
@@ -75,5 +85,6 @@ export function useStreamingTTS(options: UseStreamingTTSOptions = {}): UseStream
     pause,
     stop,
     enqueueAudio,
+    flush,
   }
 }

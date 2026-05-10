@@ -3,9 +3,14 @@
  * Feature: 20260508-voice-interaction-feature
  *
  * 提供麦克风录音功能和实时语音识别展示
+ *
+ * 注意（2026-05-10 修复）：
+ * 已移除 onTextReady 中转链路 —— 用户 ASR 文本与 AI 回复文本统一由 useVoiceChat
+ * 的 onUserTranscript / onAiResponseFinalized 回调直接落到聊天列表，
+ * 避免在停止录音时再走一次 LLM + TTS 合成（造成重复回复）。
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button, Modal, Typography, Spin } from '@douyinfe/semi-ui'
 import { IconMicrophoneStroked, IconStop } from '@douyinfe/semi-icons'
 import { useVoiceRecorder, isMediaRecorderSupported } from '../../hooks/useVoiceRecorder'
@@ -13,8 +18,6 @@ import type { VoiceError } from '../../types/voice'
 import './styles.css'
 
 export interface VoiceRecorderProps {
-  /** 识别文本准备好时的回调 */
-  onTextReady?: (text: string) => void
   /** 禁用状态 */
   disabled?: boolean
   /** 发送音频数据的函数（由父组件提供） */
@@ -122,7 +125,6 @@ const RecordingModal: React.FC<RecordingModalProps> = ({
  * - 点击停止或达到时长限制后发送识别文本
  */
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
-  onTextReady,
   disabled = false,
   sendAudio,
   isConnected = false,
@@ -137,10 +139,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const [modalVisible, setModalVisible] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [pendingRecording, setPendingRecording] = useState(false)
-  // 标记本轮录音的 ASR 文本是否已发送，避免火山对一句话下发多个 final 片段时重复发送
-  const hasSentRef = useRef(false)
-  // 等待 ASR final 累积稳定的延时句柄
-  const sendDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 处理音频数据
   const handleAudioData = useCallback(
@@ -200,12 +198,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     }
 
     setConnectionError(null)
-    // 新一轮录音开始：重置发送状态
-    hasSentRef.current = false
-    if (sendDebounceRef.current) {
-      clearTimeout(sendDebounceRef.current)
-      sendDebounceRef.current = null
-    }
     // 清空模态框内残留的上一次 ASR 文本（连接保持时再次点话筒的场景）
     onResetTranscript?.()
 
@@ -235,34 +227,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     // 3. 关闭弹窗
     setModalVisible(false)
   }, [stopRecording, onStopRecording])
-
-  // 发送识别文本
-  // 关键修复：火山 ASR 对一句话可能下发多个 isFinal 片段（"你"→"你好"），
-  // 必须去重 + 防抖，确保本轮录音只触发一次 onTextReady
-  useEffect(() => {
-    if (!finalText || isRecording || !onTextReady || hasSentRef.current) {
-      return
-    }
-    // 清除上次未触发的定时器，等待 ASR 累积稳定后再发送
-    if (sendDebounceRef.current) {
-      clearTimeout(sendDebounceRef.current)
-    }
-    sendDebounceRef.current = setTimeout(() => {
-      // 二次校验：避免 race（如组件已开始下一轮录音）
-      if (hasSentRef.current) return
-      hasSentRef.current = true
-      onTextReady(finalText)
-    }, 300)
-  }, [finalText, isRecording, onTextReady])
-
-  // 卸载时清理定时器，避免内存泄漏
-  useEffect(() => {
-    return () => {
-      if (sendDebounceRef.current) {
-        clearTimeout(sendDebounceRef.current)
-      }
-    }
-  }, [])
 
   // 显示错误提示
   useEffect(() => {

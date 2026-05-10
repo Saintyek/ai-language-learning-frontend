@@ -17,8 +17,13 @@ import type {
 } from '../types/voice'
 
 export interface UseVoiceSessionOptions {
-  /** AI 文本回复回调 */
+  /** AI 文本回复回调（流式，每片到达即触发） */
   onChatResponse?: (text: string, isFinal: boolean) => void
+  /**
+   * AI 本轮回复完整结束时回调（在 tts_ended 触发）
+   * 用于实时语音链路：把累积的完整 AI 文本一次性落到聊天列表
+   */
+  onAiResponseFinalized?: (fullText: string) => void
   /** ASR 识别结果回调 */
   onAsrResult?: (text: string, isFinal: boolean) => void
   /** 发音分析结果回调 */
@@ -62,7 +67,14 @@ export interface UseVoiceSessionReturn {
  * 语音会话管理 Hook
  */
 export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceSessionReturn {
-  const { onChatResponse, onAsrResult, onPronunciationResult, onError, onStatusChange } = options
+  const {
+    onChatResponse,
+    onAiResponseFinalized,
+    onAsrResult,
+    onPronunciationResult,
+    onError,
+    onStatusChange,
+  } = options
 
   const [status, setStatus] = useState<VoiceSessionStatus>('idle')
   const [aiResponseText, setAiResponseText] = useState('')
@@ -75,6 +87,18 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
   const wsRef = useRef<VoiceWebSocketController | null>(null)
   const audioPlayerRef = useRef<StreamingAudioPlayer | null>(null)
   const currentTextRef = useRef('')
+
+  /**
+   * 防御性去重锁（2026-05-10 修复 "AI 重复回复两遍"）：
+   * - aiRespondingRef：本轮已经收到 AI 回复（chat / tts）后置 true，
+   *     用于阻止 sendEndASR 在火山 VAD 已自动触发回复的情况下再发一次 EndASR
+   *     （否则火山会再生成一遍完全相同的 AI 回复 → 听到两段相同语音）。
+   * - endAsrSentRef：本轮已经发送过 EndASR 后置 true，
+   *     防御 React 重复回调或用户连点造成的多次 EndASR 投递。
+   * 两把锁均在每轮 startSession / tts_ended 时重置。
+   */
+  const aiRespondingRef = useRef(false)
+  const endAsrSentRef = useRef(false)
 
   // 初始化音频播放器
   useEffect(() => {
@@ -120,6 +144,8 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
         case 'chat':
           // AI 文字回复
           console.log('[useVoiceSession] Chat response:', event.text, 'isFinal:', event.isFinal)
+          // 收到 AI 回复 → 标记本轮已进入 AI 响应阶段
+          aiRespondingRef.current = true
           if (event.isFinal) {
             currentTextRef.current += event.text
             setAiResponseText(currentTextRef.current)
@@ -133,14 +159,24 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
         case 'tts':
           // TTS 音频数据
           console.log('[useVoiceSession] TTS audio received, sequence:', event.sequence)
+          aiRespondingRef.current = true
           setIsPlayingTTS(true)
           audioPlayerRef.current?.enqueue(event.audio)
           break
 
         case 'tts_ended':
-          // TTS 播放结束
-          console.log('[useVoiceSession] TTS ended')
+          // TTS 播放结束 = AI 本轮回复完整结束
+          // 把累积好的完整文本回吐给上层（实时语音链路据此把消息落到聊天列表）
+          console.log('[useVoiceSession] TTS ended, finalizing AI response')
           setIsPlayingTTS(false)
+          if (currentTextRef.current) {
+            onAiResponseFinalized?.(currentTextRef.current)
+          }
+          // 重置缓冲区与去重锁，准备接收下一轮 AI 回复
+          currentTextRef.current = ''
+          setAiResponseText('')
+          aiRespondingRef.current = false
+          endAsrSentRef.current = false
           break
 
         case 'pronunciation':
@@ -175,7 +211,14 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
           break
       }
     },
-    [onChatResponse, onAsrResult, onPronunciationResult, onError, updateStatus]
+    [
+      onChatResponse,
+      onAiResponseFinalized,
+      onAsrResult,
+      onPronunciationResult,
+      onError,
+      updateStatus,
+    ]
   )
 
   // 开始会话
@@ -191,8 +234,10 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
       return
     }
 
-    // 重置状态
+    // 重置状态与去重锁
     currentTextRef.current = ''
+    aiRespondingRef.current = false
+    endAsrSentRef.current = false
     setAiResponseText('')
     setPronunciationResult(null)
     setError(null)
@@ -237,6 +282,8 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
       audioPlayerRef.current?.stop()
       setIsPlayingTTS(false)
       currentTextRef.current = ''
+      aiRespondingRef.current = false
+      endAsrSentRef.current = false
       updateStatus('idle')
     }, 100)
   }, [updateStatus])
@@ -258,7 +305,22 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
   }, [])
 
   // 发送 EndASR 事件（停止音频输入）
+  // 关键去重：
+  //  1) 若火山服务端 VAD 已经自动触发了一次 AI 回复（aiResponding=true），
+  //     再发 EndASR 会导致火山生成第二段完全相同的回复 → 必须跳过
+  //  2) 已发送过的 EndASR 不再重发，避免任何外部重复调用造成重复回复
   const sendEndASR = useCallback(() => {
+    if (aiRespondingRef.current) {
+      console.log(
+        '[useVoiceSession] EndASR skipped: AI is already responding (server VAD likely triggered)'
+      )
+      return
+    }
+    if (endAsrSentRef.current) {
+      console.log('[useVoiceSession] EndASR skipped: already sent in this turn')
+      return
+    }
+    endAsrSentRef.current = true
     wsRef.current?.sendMessage({ type: 'end_asr' })
   }, [])
 

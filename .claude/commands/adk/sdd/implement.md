@@ -118,7 +118,15 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - Re-read `tasks.md` and verify no `- [ ]` remains
    - If incomplete tasks exist, complete them before proceeding
 
-12. Build and test validation:
+12. **Unit Test Generation (bits-unit-test-gen)**:
+   - Check if `bits-unit-test-gen` is listed in the available skills. If NOT found, skip this step entirely and proceed to step 13.
+   - If available, collect the list of source files modified during this implement session: extract file paths from completed tasks in tasks.md, then exclude spec/doc/config files (e.g. tasks.md, spec.md, plan.md, *.yaml, *.json config, README)
+   - Invoke `bits-unit-test-gen` skill, explicitly passing the collected source file list as the target scope — do NOT rely on workspace git changes auto-detection
+   - The skill will: extract target functions → generate test code → compile → run tests → fix business code bugs if found → re-run validation
+   - Wait for the skill to complete before proceeding
+   - If the project language is unsupported by bits-unit-test-gen, the skill will notify the user and exit gracefully — proceed to step 13 regardless
+
+13. Build and test validation:
    - After all tasks are completed, try to compile and test the project based on its build system
    - Common build systems to check:
      * `package.json` → Try `npm run build` or `npm test`
@@ -131,13 +139,13 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - Re-run the build/test until successful
    - Report final status with summary of completed work and build/test results
 
-13. **Automatic Test Execution (SDT)**:
+14. **Automatic Test Execution (SDT)**:
    - Check if test artifacts (such as `test/tasks.md` and `test/case.md`) exist in the `test` directory.
    - If these test artifacts exist, immediately execute the `/adk:sdt:implement` workflow to run the test cases and generate a test report.
    - Do not pause or ask the user for permission before doing this.
    - If no test artifacts are found, skip this step.
 
-14. **Test Failure Triage & Business Code Fix**:
+15. **Test Failure Triage & Business Code Fix**:
    - After `/adk:sdt:implement` completes, read the generated `test/report.md`.
    - Extract all failed test cases (❌ FAIL) from the report, including their TC-ID, title, failure reason, root cause analysis, and suggested fix.
    - Present the list of failed cases to the user in a clear table format and ask: "The following test cases failed. Which ones would you like me to fix? (Enter TC-IDs, e.g., TC-001,TC-003, or 'all' to fix all, or 'skip' to skip)"
@@ -145,7 +153,7 @@ If the given `$ARGUMENTS` contains a link, you need to read the content of the l
    - Based on the user's selection:
      - For each selected failed case, analyze the root cause and fix the **business/production code** (NOT the test cases).
      - Use the failure analysis from the report (error message, code location, root cause, fix suggestion) as guidance.
-     - After fixing the business code, re-run the build/test validation (step 11) to ensure the code compiles and passes local tests.
+     - After fixing the business code, re-run the build/test validation (step 13) to ensure the code compiles and passes local tests.
      - Then re-execute `/adk:sdt:implement` to verify the previously failed test cases now pass.
      - If new failures appear after the re-run, repeat the triage process (present failures → ask user → fix → re-run) until all selected cases pass or the user chooses to skip.
    - If the user chooses 'skip', proceed directly to the Next Step Guidance.

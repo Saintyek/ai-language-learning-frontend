@@ -118,6 +118,7 @@ export interface StartSessionEvent {
   type: 'start_session'
   sessionId?: string
   language?: string
+  scenario?: string
 }
 
 export interface EndSessionEvent {

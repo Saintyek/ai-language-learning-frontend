@@ -17,6 +17,10 @@ import type {
 } from '../types/voice'
 
 export interface UseVoiceSessionOptions {
+  /** 当前学习语言，用于后端生成与文本聊天一致的系统 prompt */
+  language?: string
+  /** 当前聊天场景，用于后端注入相同的场景 prompt */
+  scenario?: string
   /** AI 文本回复回调（流式，每片到达即触发） */
   onChatResponse?: (text: string, isFinal: boolean) => void
   /**
@@ -68,6 +72,8 @@ export interface UseVoiceSessionReturn {
  */
 export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceSessionReturn {
   const {
+    language = 'us',
+    scenario,
     onChatResponse,
     onAiResponseFinalized,
     onAsrResult,
@@ -246,7 +252,8 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
 
     // 创建 WebSocket 连接
     const wsOptions: VoiceWebSocketOptions = {
-      initialMessage: { type: 'start_session', language: 'us' },
+      // 会话启动参数需要与文本聊天保持一致，由后端统一注入 prompt。
+      initialMessage: { type: 'start_session', language, scenario },
       onMessage: handleWSMessage,
       onError: err => {
         setIsConnecting(false)
@@ -269,7 +276,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     }
 
     wsRef.current = createVoiceWebSocket(wsOptions)
-  }, [handleWSMessage, onError, updateStatus, status])
+  }, [handleWSMessage, language, onError, scenario, updateStatus, status])
 
   // 结束会话
   const endSession = useCallback(() => {

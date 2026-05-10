@@ -145,11 +145,6 @@ export default function useChat({
 
   const buildRequestMessages = useCallback(
     (userMessage: string): ChatMessagePayload[] => {
-      // 如果有场景，后端会注入场景 prompt，前端不再添加默认 system prompt
-      const shouldAddSystemPrompt = !scenarioKey
-
-      const systemPrompt = `你是一名${languageLabel}语言学习助手。请围绕${languageLabel}口语练习、纠错和场景对话来回答，优先使用${languageLabel}回复；当用户明显看不懂时，可以补充简短中文解释。`
-
       const historyMessages = chats.flatMap<ChatMessagePayload>(chat => {
         const textContent = getChatTextContent(chat.content)
         if (chat.status === 'cancelled' || !textContent) {
@@ -166,16 +161,12 @@ export default function useChat({
 
       const messages: ChatMessagePayload[] = []
 
-      if (shouldAddSystemPrompt) {
-        messages.push({ role: 'system', content: systemPrompt })
-      }
-
       messages.push(...historyMessages)
       messages.push({ role: 'user', content: userMessage })
 
       return messages
     },
-    [chats, getChatTextContent, languageLabel, scenarioKey]
+    [chats, getChatTextContent]
   )
 
   const markLatestAssistantMessage = useCallback(

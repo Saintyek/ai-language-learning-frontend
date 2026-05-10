@@ -89,6 +89,10 @@ const Chat: React.FC = () => {
     initialMessages,
   })
   const { digitalHuman } = useDigitalHuman()
+  const voiceScenarioKey =
+    sceneSelection.sceneValue.length >= 2
+      ? `${sceneSelection.sceneValue[0]}/${sceneSelection.sceneValue[1]}`
+      : undefined
 
   // 语音聊天集成
   // 实时语音链路与文本聊天链路解耦：
@@ -96,6 +100,8 @@ const Chat: React.FC = () => {
   //   - AI 实时回复完成 → 直接 append 助手消息
   // 不再调用 chat.handleSubmitText（避免触发 LLM 文本生成 + TTS 二次合成）
   const voiceChat = useVoiceChat({
+    language: langCode,
+    scenario: voiceScenarioKey,
     onUserTranscript: text => chat.appendCompletedMessage('user', text),
     onAiResponseFinalized: text => chat.appendCompletedMessage('assistant', text),
   })

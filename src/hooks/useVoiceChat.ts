@@ -11,6 +11,10 @@ import { useVoiceSession } from './useVoiceSession'
 import type { VoiceError, PronunciationResult } from '../types/voice'
 
 export interface VoiceChatOptions {
+  /** 当前学习语言，透传给实时语音后端用于 prompt 构建 */
+  language?: string
+  /** 当前场景标识，透传给实时语音后端用于场景 prompt 注入 */
+  scenario?: string
   /**
    * 用户语音识别完成回调（isFinal=true 时由 useVoiceChat 触发一次完整文本）
    * 上层据此把"用户消息"直接 append 到聊天列表
@@ -62,7 +66,7 @@ export interface UseVoiceChatReturn {
  * 语音聊天协调 Hook
  */
 export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
-  const { onUserTranscript, onAiResponseFinalized, onError } = options
+  const { language, scenario, onUserTranscript, onAiResponseFinalized, onError } = options
 
   const [asrInterimText, setAsrInterimText] = useState('')
   const [asrFinalText, setAsrFinalText] = useState('')
@@ -101,6 +105,8 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
 
   // 使用语音会话 Hook
   const voiceSession = useVoiceSession({
+    language,
+    scenario,
     onAsrResult: handleAsrResult,
     onAiResponseFinalized: handleAiResponseFinalized,
     onError,

@@ -8,13 +8,15 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { useVoiceSession } from './useVoiceSession'
-import type { VoiceError, PronunciationResult } from '../types/voice'
+import type { VoiceError } from '../types/voice'
 
 export interface VoiceChatOptions {
   /** 当前学习语言，透传给实时语音后端用于 prompt 构建 */
   language?: string
   /** 当前场景标识，透传给实时语音后端用于场景 prompt 注入 */
   scenario?: string
+  /** 是否要求 AI 在每次语音回复中追加轻量发音反馈 */
+  pronunciationAnalysisEnabled?: boolean
   /**
    * 用户语音识别完成回调（isFinal=true 时由 useVoiceChat 触发一次完整文本）
    * 上层据此把"用户消息"直接 append 到聊天列表
@@ -40,14 +42,14 @@ export interface UseVoiceChatReturn {
   aiResponseText: string
   /** 是否正在播放 TTS */
   isPlayingTTS: boolean
-  /** 发音分析结果 */
-  pronunciationResult: PronunciationResult | null
   /** 错误信息 */
   error: VoiceError | null
   /** 是否已连接 */
   isConnected: boolean
   /** 是否正在连接中 */
   isConnecting: boolean
+  /** 当前已启动语音会话使用的发音分析开关值 */
+  sessionPronunciationAnalysisEnabled: boolean | null
   /** 开始语音会话 */
   startVoiceSession: () => void
   /** 停止录音（发送 EndASR 信号，等待 AI 回复） */
@@ -66,7 +68,14 @@ export interface UseVoiceChatReturn {
  * 语音聊天协调 Hook
  */
 export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
-  const { language, scenario, onUserTranscript, onAiResponseFinalized, onError } = options
+  const {
+    language,
+    scenario,
+    pronunciationAnalysisEnabled,
+    onUserTranscript,
+    onAiResponseFinalized,
+    onError,
+  } = options
 
   const [asrInterimText, setAsrInterimText] = useState('')
   const [asrFinalText, setAsrFinalText] = useState('')
@@ -107,6 +116,7 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
   const voiceSession = useVoiceSession({
     language,
     scenario,
+    pronunciationAnalysisEnabled,
     onAsrResult: handleAsrResult,
     onAiResponseFinalized: handleAiResponseFinalized,
     onError,
@@ -160,10 +170,10 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
     asrFinalText,
     aiResponseText: voiceSession.aiResponseText,
     isPlayingTTS: voiceSession.isPlayingTTS,
-    pronunciationResult: voiceSession.pronunciationResult,
     error: voiceSession.error,
     isConnected: voiceSession.isConnected,
     isConnecting: voiceSession.isConnecting,
+    sessionPronunciationAnalysisEnabled: voiceSession.sessionPronunciationAnalysisEnabled,
     startVoiceSession,
     stopRecording,
     endVoiceSession,

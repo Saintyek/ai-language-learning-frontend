@@ -9,7 +9,6 @@ import { useVoiceChat } from '@/hooks/useVoiceChat'
 import DigitalHumanPanel from './components/DigitalHumanPanel'
 import ChatDialogArea from './components/ChatDialogArea'
 import ChatInputArea from './components/ChatInputArea'
-import { PronunciationAnalysis } from '@/components/PronunciationAnalysis'
 import { getChatSessionDetail, type ChatMessage } from '@/api/chat'
 import { scenarioToValueArray } from '@/utils/scenarioUtils'
 import type { Message as AIChatMessage } from '@douyinfe/semi-foundation/lib/es/aiChatDialogue/foundation'
@@ -21,6 +20,7 @@ const Chat: React.FC = () => {
   const [sceneDropdownVisible, setSceneDropdownVisible] = useState(false)
   const [initialMessages, setInitialMessages] = useState<AIChatMessage[] | undefined>()
   const [loadingSession, setLoadingSession] = useState(false)
+  const [pronunciationAnalysisEnabled, setPronunciationAnalysisEnabled] = useState(false)
   const chatPanelRef = useRef<HTMLDivElement>(null)
 
   // 使用自定义 Hooks - 需要在 loadSessionHistory 之前定义
@@ -102,9 +102,23 @@ const Chat: React.FC = () => {
   const voiceChat = useVoiceChat({
     language: langCode,
     scenario: voiceScenarioKey,
+    pronunciationAnalysisEnabled,
     onUserTranscript: text => chat.appendCompletedMessage('user', text),
     onAiResponseFinalized: text => chat.appendCompletedMessage('assistant', text),
   })
+  const { isConnected: isVoiceConnected, endVoiceSession } = voiceChat
+
+  const handlePronunciationAnalysisChange = useCallback(
+    (enabled: boolean) => {
+      setPronunciationAnalysisEnabled(enabled)
+
+      if (isVoiceConnected) {
+        // Realtime 的 system_role 只在会话启动时生效，切换开关后重开下一次语音会话。
+        endVoiceSession()
+      }
+    },
+    [endVoiceSession, isVoiceConnected]
+  )
 
   // 自动滚动到底部
   useEffect(() => {
@@ -143,13 +157,6 @@ const Chat: React.FC = () => {
               loading={loadingSession}
             />
 
-            {/* 发音分析结果 */}
-            {voiceChat.pronunciationResult && (
-              <div className="px-4 pb-2">
-                <PronunciationAnalysis result={voiceChat.pronunciationResult} />
-              </div>
-            )}
-
             <ChatInputArea
               generating={chat.generating}
               stopGenerating={chat.stopGenerating}
@@ -160,6 +167,8 @@ const Chat: React.FC = () => {
               setSceneDropdownVisible={setSceneDropdownVisible}
               onMessageSend={chat.handleSubmitText}
               voiceChat={voiceChat}
+              pronunciationAnalysisEnabled={pronunciationAnalysisEnabled}
+              onPronunciationAnalysisChange={handlePronunciationAnalysisChange}
             />
           </div>
         </div>

@@ -10,12 +10,14 @@
  * 避免在停止录音时再走一次 LLM + TTS 合成（造成重复回复）。
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
-import { Button, Modal, Typography, Spin } from '@douyinfe/semi-ui'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Button, Modal, Typography, Spin, Switch } from '@douyinfe/semi-ui'
 import { IconMicrophoneStroked, IconStop } from '@douyinfe/semi-icons'
 import { useVoiceRecorder, isMediaRecorderSupported } from '../../hooks/useVoiceRecorder'
 import type { VoiceError } from '../../types/voice'
 import './styles.css'
+
+const noopPronunciationAnalysisChange = () => undefined
 
 export interface VoiceRecorderProps {
   /** 禁用状态 */
@@ -26,6 +28,8 @@ export interface VoiceRecorderProps {
   isConnected?: boolean
   /** 是否正在连接中 */
   isConnecting?: boolean
+  /** 当前已连接语音会话使用的发音分析开关值 */
+  sessionPronunciationAnalysisEnabled?: boolean | null
   /** 开始语音会话 */
   onStartSession?: () => void
   /** 停止录音（发送 EndASR 信号） */
@@ -38,13 +42,23 @@ export interface VoiceRecorderProps {
   asrInterimText?: string
   /** ASR 最终结果 */
   asrFinalText?: string
+  /** 是否开启发音分析轻量反馈 */
+  pronunciationAnalysisEnabled?: boolean
+  /** 发音分析开关变更回调 */
+  onPronunciationAnalysisChange?: (enabled: boolean) => void
 }
 
 interface RecordingModalProps {
   visible: boolean
+  isRecording: boolean
+  isConnecting: boolean
   interimText: string
   finalText: string
+  pronunciationAnalysisEnabled: boolean
+  onPronunciationAnalysisChange: (enabled: boolean) => void
+  onStart: () => void
   onStop: () => void
+  onCancel: () => void
 }
 
 /**
@@ -52,16 +66,23 @@ interface RecordingModalProps {
  */
 const RecordingModal: React.FC<RecordingModalProps> = ({
   visible,
+  isRecording,
+  isConnecting,
   interimText,
   finalText,
+  pronunciationAnalysisEnabled,
+  onPronunciationAnalysisChange,
+  onStart,
   onStop,
+  onCancel,
 }) => {
   return (
     <Modal
       visible={visible}
       title="语音输入"
       footer={null}
-      closable={false}
+      closable={!isRecording && !isConnecting}
+      onCancel={onCancel}
       centered
       width={400}
       className="voice-recorder-modal"
@@ -76,6 +97,22 @@ const RecordingModal: React.FC<RecordingModalProps> = ({
             <span className="voice-recorder-modal__wave-bar" />
             <span className="voice-recorder-modal__wave-bar" />
           </div>
+        </div>
+
+        {/* 发音分析开关：会影响本次语音会话启动时注入的 AI 行为 */}
+        <div className="voice-recorder-modal__pronunciation-toggle">
+          <div>
+            <Typography.Text strong>发音分析</Typography.Text>
+            <Typography.Paragraph type="tertiary" style={{ margin: '4px 0 0' }}>
+              开启后，AI 每次回复都会评价本轮发音
+            </Typography.Paragraph>
+          </div>
+          <Switch
+            checked={pronunciationAnalysisEnabled}
+            disabled={isRecording || isConnecting}
+            onChange={onPronunciationAnalysisChange}
+            aria-label="发音分析开关"
+          />
         </div>
 
         {/* 识别文本展示 */}
@@ -95,22 +132,35 @@ const RecordingModal: React.FC<RecordingModalProps> = ({
           )}
           {!finalText && !interimText && (
             <Typography.Paragraph type="tertiary" style={{ textAlign: 'center' }}>
-              正在聆听...
+              {isConnecting ? '正在连接语音服务...' : isRecording ? '正在聆听...' : '准备开始录音'}
             </Typography.Paragraph>
           )}
         </div>
 
-        {/* 停止按钮 */}
-        <Button
-          type="danger"
-          theme="solid"
-          icon={<IconStop />}
-          onClick={onStop}
-          size="large"
-          className="voice-recorder-modal__stop-btn"
-        >
-          停止录音
-        </Button>
+        {isRecording ? (
+          <Button
+            type="danger"
+            theme="solid"
+            icon={<IconStop />}
+            onClick={onStop}
+            size="large"
+            className="voice-recorder-modal__stop-btn"
+          >
+            停止录音
+          </Button>
+        ) : (
+          <Button
+            type="primary"
+            theme="solid"
+            icon={isConnecting ? <Spin size="small" /> : <IconMicrophoneStroked />}
+            onClick={onStart}
+            disabled={isConnecting}
+            size="large"
+            className="voice-recorder-modal__stop-btn"
+          >
+            {isConnecting ? '连接中...' : '开始录音'}
+          </Button>
+        )}
       </div>
     </Modal>
   )
@@ -129,16 +179,20 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   sendAudio,
   isConnected = false,
   isConnecting = false,
+  sessionPronunciationAnalysisEnabled = null,
   onStartSession,
   onStopRecording,
   onEndSession,
   onResetTranscript,
   asrInterimText: externalInterimText,
   asrFinalText: externalFinalText,
+  pronunciationAnalysisEnabled = false,
+  onPronunciationAnalysisChange,
 }) => {
   const [modalVisible, setModalVisible] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [pendingRecording, setPendingRecording] = useState(false)
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 处理音频数据
   const handleAudioData = useCallback(
@@ -189,8 +243,22 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     }
   }, [isConnected, pendingRecording, startRecording])
 
-  // 开始录音
-  const handleStartRecording = useCallback(async () => {
+  useEffect(() => {
+    return () => {
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleOpenRecordingModal = useCallback(() => {
+    setConnectionError(null)
+    onResetTranscript?.()
+    setModalVisible(true)
+  }, [onResetTranscript])
+
+  // 用户在模态框中确认后，才用当前开关状态启动语音会话和录音。
+  const handleConfirmStartRecording = useCallback(async () => {
     // 检查浏览器兼容性
     if (!isMediaRecorderSupported()) {
       setConnectionError('您的浏览器不支持录音功能，请使用 Chrome、Firefox 或 Edge 浏览器')
@@ -198,11 +266,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     }
 
     setConnectionError(null)
-    // 清空模态框内残留的上一次 ASR 文本（连接保持时再次点话筒的场景）
-    onResetTranscript?.()
 
-    // 如果已经连接，直接开始录音
-    if (isConnected) {
+    const shouldReuseSession =
+      isConnected && sessionPronunciationAnalysisEnabled === pronunciationAnalysisEnabled
+
+    // 只有当前连接的 Realtime 会话已经使用相同开关值时，才复用会话直接录音。
+    if (shouldReuseSession) {
       try {
         await startRecording()
         setModalVisible(true)
@@ -211,11 +280,25 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         onEndSession?.()
       }
     } else {
-      // 否则先启动连接，等待连接成功后再开始录音
+      // system_role 只在会话启动时生效；开关变更后必须重开会话再录音。
       setPendingRecording(true)
-      onStartSession?.()
+      if (isConnected) {
+        onEndSession?.()
+        restartTimerRef.current = setTimeout(() => {
+          onStartSession?.()
+        }, 150)
+      } else {
+        onStartSession?.()
+      }
     }
-  }, [isConnected, startRecording, onStartSession, onEndSession, onResetTranscript])
+  }, [
+    isConnected,
+    sessionPronunciationAnalysisEnabled,
+    pronunciationAnalysisEnabled,
+    startRecording,
+    onStartSession,
+    onEndSession,
+  ])
 
   // 停止录音
   const handleStopRecording = useCallback(() => {
@@ -227,6 +310,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     // 3. 关闭弹窗
     setModalVisible(false)
   }, [stopRecording, onStopRecording])
+
+  const handleCancelModal = useCallback(() => {
+    if (isRecording || isConnecting) return
+    setPendingRecording(false)
+    setModalVisible(false)
+  }, [isConnecting, isRecording])
 
   // 显示错误提示
   useEffect(() => {
@@ -240,7 +329,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       <Button
         type="tertiary"
         theme="borderless"
-        onClick={isRecording ? handleStopRecording : handleStartRecording}
+        onClick={isRecording ? handleStopRecording : handleOpenRecordingModal}
         disabled={disabled || isConnecting}
         icon={
           isConnecting ? (
@@ -261,9 +350,17 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       {/* 录音状态弹窗 */}
       <RecordingModal
         visible={modalVisible}
+        isRecording={isRecording}
+        isConnecting={isConnecting}
         interimText={interimText}
         finalText={finalText}
+        pronunciationAnalysisEnabled={pronunciationAnalysisEnabled}
+        onPronunciationAnalysisChange={
+          onPronunciationAnalysisChange ?? noopPronunciationAnalysisChange
+        }
+        onStart={handleConfirmStartRecording}
         onStop={handleStopRecording}
+        onCancel={handleCancelModal}
       />
 
       {/* 错误提示弹窗 */}

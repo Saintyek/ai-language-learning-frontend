@@ -13,7 +13,6 @@ import type {
   VoiceEvent,
   VoiceError,
   VoiceSessionStatus,
-  PronunciationResult,
 } from '../types/voice'
 
 export interface UseVoiceSessionOptions {
@@ -21,6 +20,8 @@ export interface UseVoiceSessionOptions {
   language?: string
   /** 当前聊天场景，用于后端注入相同的场景 prompt */
   scenario?: string
+  /** 是否要求 AI 在每次语音回复中追加轻量发音反馈 */
+  pronunciationAnalysisEnabled?: boolean
   /** AI 文本回复回调（流式，每片到达即触发） */
   onChatResponse?: (text: string, isFinal: boolean) => void
   /**
@@ -30,8 +31,6 @@ export interface UseVoiceSessionOptions {
   onAiResponseFinalized?: (fullText: string) => void
   /** ASR 识别结果回调 */
   onAsrResult?: (text: string, isFinal: boolean) => void
-  /** 发音分析结果回调 */
-  onPronunciationResult?: (result: PronunciationResult) => void
   /** 错误回调 */
   onError?: (error: VoiceError) => void
   /** 会话状态变化回调 */
@@ -43,8 +42,6 @@ export interface UseVoiceSessionReturn {
   status: VoiceSessionStatus
   /** 当前 AI 回复文本 */
   aiResponseText: string
-  /** 发音分析结果 */
-  pronunciationResult: PronunciationResult | null
   /** 是否正在播放 TTS */
   isPlayingTTS: boolean
   /** 错误信息 */
@@ -65,6 +62,8 @@ export interface UseVoiceSessionReturn {
   isConnected: boolean
   /** 是否正在连接中 */
   isConnecting: boolean
+  /** 当前已启动语音会话使用的发音分析开关值 */
+  sessionPronunciationAnalysisEnabled: boolean | null
 }
 
 /**
@@ -74,21 +73,23 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
   const {
     language = 'us',
     scenario,
+    pronunciationAnalysisEnabled = false,
     onChatResponse,
     onAiResponseFinalized,
     onAsrResult,
-    onPronunciationResult,
     onError,
     onStatusChange,
   } = options
 
   const [status, setStatus] = useState<VoiceSessionStatus>('idle')
   const [aiResponseText, setAiResponseText] = useState('')
-  const [pronunciationResult, setPronunciationResult] = useState<PronunciationResult | null>(null)
   const [isPlayingTTS, setIsPlayingTTS] = useState(false)
   const [error, setError] = useState<VoiceError | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [sessionPronunciationAnalysisEnabled, setSessionPronunciationAnalysisEnabled] = useState<
+    boolean | null
+  >(null)
 
   const wsRef = useRef<VoiceWebSocketController | null>(null)
   const audioPlayerRef = useRef<StreamingAudioPlayer | null>(null)
@@ -134,6 +135,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
           console.log('[useVoiceSession] Backend connected to RealtimeAPI:', event.sessionId)
           setIsConnecting(false)
           setIsConnected(true)
+          setSessionPronunciationAnalysisEnabled(pronunciationAnalysisEnabled)
           break
 
         case 'asr':
@@ -185,13 +187,6 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
           endAsrSentRef.current = false
           break
 
-        case 'pronunciation':
-          // 发音分析结果
-          console.log('[useVoiceSession] Pronunciation result:', event.result)
-          setPronunciationResult(event.result)
-          onPronunciationResult?.(event.result)
-          break
-
         case 'error':
           // 错误事件
           console.error('[useVoiceSession] Error:', event.code, event.message)
@@ -221,7 +216,6 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
       onChatResponse,
       onAiResponseFinalized,
       onAsrResult,
-      onPronunciationResult,
       onError,
       updateStatus,
     ]
@@ -245,7 +239,6 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     aiRespondingRef.current = false
     endAsrSentRef.current = false
     setAiResponseText('')
-    setPronunciationResult(null)
     setError(null)
     setIsConnecting(true)
     updateStatus('recording')
@@ -254,11 +247,18 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     const token = localStorage.getItem('token') ?? undefined
     const wsOptions: VoiceWebSocketOptions = {
       // 会话启动参数需要与文本聊天保持一致，由后端统一注入 prompt。
-      initialMessage: { type: 'start_session', token, language, scenario },
+      initialMessage: {
+        type: 'start_session',
+        token,
+        language,
+        scenario,
+        pronunciationAnalysisEnabled,
+      },
       onMessage: handleWSMessage,
       onError: err => {
         setIsConnecting(false)
         setError(err)
+        setSessionPronunciationAnalysisEnabled(null)
         updateStatus('error')
         onError?.(err)
       },
@@ -270,6 +270,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
       onClose: () => {
         setIsConnecting(false)
         setIsConnected(false)
+        setSessionPronunciationAnalysisEnabled(null)
         if (status !== 'idle') {
           updateStatus('idle')
         }
@@ -277,7 +278,15 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     }
 
     wsRef.current = createVoiceWebSocket(wsOptions)
-  }, [handleWSMessage, language, onError, scenario, updateStatus, status])
+  }, [
+    handleWSMessage,
+    language,
+    onError,
+    pronunciationAnalysisEnabled,
+    scenario,
+    updateStatus,
+    status,
+  ])
 
   // 结束会话
   const endSession = useCallback(() => {
@@ -292,6 +301,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
       currentTextRef.current = ''
       aiRespondingRef.current = false
       endAsrSentRef.current = false
+      setSessionPronunciationAnalysisEnabled(null)
       updateStatus('idle')
     }, 100)
   }, [updateStatus])
@@ -343,7 +353,6 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
   return {
     status,
     aiResponseText,
-    pronunciationResult,
     isPlayingTTS,
     error,
     startSession,
@@ -354,5 +363,6 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
     sendEndASR,
     isConnected,
     isConnecting,
+    sessionPronunciationAnalysisEnabled,
   }
 }

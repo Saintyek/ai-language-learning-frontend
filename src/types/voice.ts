@@ -22,21 +22,6 @@ export interface VoiceError {
   retryable: boolean
 }
 
-export interface PronunciationProblem {
-  position: number
-  expected: string
-  actual: string
-  type: 'missing' | 'wrong' | 'extra'
-}
-
-export interface PronunciationResult {
-  score: number
-  userText: string
-  standardText: string
-  problems: PronunciationProblem[]
-  suggestion: string
-}
-
 export interface VoiceSession {
   id: string
   status: VoiceSessionStatus
@@ -44,7 +29,6 @@ export interface VoiceSession {
   finalText: string
   aiResponse: string
   audioChunks: string[]
-  pronunciationResult: PronunciationResult | null
   startTime: number
   endTime: number
   error: VoiceError | null
@@ -80,11 +64,6 @@ export interface TTSEndedEvent {
   type: 'tts_ended'
 }
 
-export interface PronunciationResponseEvent {
-  type: 'pronunciation'
-  result: PronunciationResult
-}
-
 export interface ErrorEvent {
   type: 'error'
   code: VoiceErrorCode
@@ -107,7 +86,6 @@ export type VoiceEvent =
   | ChatResponseEvent
   | TTSResponseEvent
   | TTSEndedEvent
-  | PronunciationResponseEvent
   | ErrorEvent
   | SessionEndedEvent
   | ASREndedEvent
@@ -120,6 +98,7 @@ export interface StartSessionEvent {
   token?: string
   language?: string
   scenario?: string
+  pronunciationAnalysisEnabled?: boolean
 }
 
 export interface EndSessionEvent {
@@ -155,9 +134,4 @@ export interface VoiceRecorderProps {
   onTextReady?: (text: string) => void
   onSessionChange?: (session: VoiceSession) => void
   disabled?: boolean
-}
-
-export interface PronunciationAnalysisProps {
-  result: PronunciationResult
-  className?: string
 }

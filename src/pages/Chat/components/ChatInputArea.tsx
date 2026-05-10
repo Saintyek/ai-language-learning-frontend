@@ -16,6 +16,8 @@ interface ChatInputAreaProps extends Pick<
   setSceneDropdownVisible: (visible: boolean) => void
   onMessageSend: (text: string) => void
   voiceChat?: UseVoiceChatReturn
+  pronunciationAnalysisEnabled: boolean
+  onPronunciationAnalysisChange: (enabled: boolean) => void
 }
 
 /**
@@ -31,6 +33,8 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   setSceneDropdownVisible,
   onMessageSend,
   voiceChat,
+  pronunciationAnalysisEnabled,
+  onPronunciationAnalysisChange,
 }) => {
   const handleMessageSend = ({ inputContents }: { inputContents: Content[] }) => {
     const text = extractPlainText(inputContents)
@@ -48,18 +52,23 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             sendAudio={voiceChat?.sendAudio}
             isConnected={voiceChat?.isConnected}
             isConnecting={voiceChat?.isConnecting}
+            sessionPronunciationAnalysisEnabled={
+              voiceChat?.sessionPronunciationAnalysisEnabled
+            }
             onStartSession={voiceChat?.startVoiceSession}
             onStopRecording={voiceChat?.stopRecording}
             onEndSession={voiceChat?.endVoiceSession}
             onResetTranscript={voiceChat?.resetTranscript}
             asrInterimText={voiceChat?.asrInterimText}
             asrFinalText={voiceChat?.asrFinalText}
+            pronunciationAnalysisEnabled={pronunciationAnalysisEnabled}
+            onPronunciationAnalysisChange={onPronunciationAnalysisChange}
           />
           {sendButton}
         </div>
       )
     },
-    [onMessageSend, generating, voiceChat]
+    [generating, voiceChat, pronunciationAnalysisEnabled, onPronunciationAnalysisChange]
   )
 
   return (

@@ -52,6 +52,7 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             onStartSession={voiceChat?.startVoiceSession}
             onStopRecording={voiceChat?.stopRecording}
             onEndSession={voiceChat?.endVoiceSession}
+            onResetTranscript={voiceChat?.resetTranscript}
             asrInterimText={voiceChat?.asrInterimText}
             asrFinalText={voiceChat?.asrFinalText}
           />

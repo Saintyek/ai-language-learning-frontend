@@ -196,21 +196,37 @@ export class StreamingAudioPlayer {
 
   /**
    * 解码 base64 音频为 AudioBuffer
+   * 关键修复（2026-05-09）：火山服务端 TTS 返回的是裸 PCM (pcm_s16le/24kHz/单声道)
+   * 流式分片，必须直接构造 AudioBuffer，不能用 decodeAudioData
+   * （decodeAudioData 只能处理完整 OGG/WAV/MP3 容器，对裸 PCM 会抛 EncodingError）
    */
   private async decodeBase64Audio(base64Audio: string): Promise<AudioBuffer> {
     if (!this.audioContext) {
       throw new Error('AudioContext not initialized')
     }
 
-    // 将 base64 转换为 ArrayBuffer
+    // base64 → Uint8Array
     const binaryString = atob(base64Audio)
     const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i)
     }
 
-    // 解码音频数据
-    return await this.audioContext.decodeAudioData(bytes.buffer)
+    // 裸 PCM int16 小端序 → Int16Array（注意按 byteOffset/length/2 切片）
+    // 长度必须为偶数；若服务端返回奇数字节，丢弃末尾 1 字节避免越界
+    const byteLength = bytes.byteLength - (bytes.byteLength % 2)
+    const int16 = new Int16Array(bytes.buffer, bytes.byteOffset, byteLength / 2)
+
+    // Int16 [-32768, 32767] → Float32 [-1, 1]，AudioBuffer 要求 Float32
+    const float32 = new Float32Array(int16.length)
+    for (let i = 0; i < int16.length; i++) {
+      float32[i] = int16[i] / 0x8000
+    }
+
+    // 24kHz 单声道，与后端 tts.audio_config 一致；与 AudioContext 采样率一致
+    const audioBuffer = this.audioContext.createBuffer(1, float32.length, 24000)
+    audioBuffer.copyToChannel(float32, 0)
+    return audioBuffer
   }
 
   /**

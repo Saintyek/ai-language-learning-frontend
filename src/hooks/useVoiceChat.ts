@@ -45,6 +45,8 @@ export interface UseVoiceChatReturn {
   sendAudio: (data: ArrayBuffer) => void
   /** 停止 TTS 播放 */
   stopTTS: () => void
+  /** 重置 ASR 文本（开始新一轮录音前调用，清空模态框上一次的文本） */
+  resetTranscript: () => void
 }
 
 /**
@@ -106,6 +108,14 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
     voiceSession.endSession()
   }, [voiceSession, onSendMessage])
 
+  // 重置 ASR 文本（开始新一轮录音前调用）
+  // 用途：用户已建立 WebSocket 长连接，再次点击话筒时清空模态框残留的上一句话
+  const resetTranscript = useCallback(() => {
+    finalTextRef.current = ''
+    setAsrInterimText('')
+    setAsrFinalText('')
+  }, [])
+
   // 发送音频数据
   const sendAudio = useCallback(
     (data: ArrayBuffer) => {
@@ -129,5 +139,6 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
     endVoiceSession,
     sendAudio,
     stopTTS: voiceSession.stopTTS,
+    resetTranscript,
   }
 }

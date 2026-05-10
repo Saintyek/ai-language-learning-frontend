@@ -217,6 +217,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions = {}): UseVoiceS
       onAiResponseFinalized,
       onAsrResult,
       onError,
+      pronunciationAnalysisEnabled,
       updateStatus,
     ]
   )

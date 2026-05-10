@@ -34,6 +34,8 @@ export interface VoiceChatOptions {
 export interface UseVoiceChatReturn {
   /** 是否在语音会话中 */
   isInVoiceSession: boolean
+  /** 是否正在采集用户语音输入 */
+  isRecordingInput: boolean
   /** ASR 中间结果 */
   asrInterimText: string
   /** ASR 最终结果 */
@@ -80,6 +82,7 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
   const [asrInterimText, setAsrInterimText] = useState('')
   const [asrFinalText, setAsrFinalText] = useState('')
   const [isInVoiceSession, setIsInVoiceSession] = useState(false)
+  const [isRecordingInput, setIsRecordingInput] = useState(false)
 
   const finalTextRef = useRef('')
   // 记录已经上报过的用户文本，避免同一句话被重复 append
@@ -129,11 +132,14 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
     setAsrInterimText('')
     setAsrFinalText('')
     setIsInVoiceSession(true)
+    setIsRecordingInput(true)
     voiceSession.startSession()
   }, [voiceSession])
 
   // 停止录音（发送 EndASR 信号，等待 AI 回复）
   const stopRecording = useCallback(() => {
+    // 停止后会话仍可能等待 AI 回复，但用户输入采集已经结束，配置开关可用于下一轮录音。
+    setIsRecordingInput(false)
     voiceSession.sendEndASR()
   }, [voiceSession])
 
@@ -141,6 +147,7 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
   // 注意：不再在此处 append 用户消息，因为 ASR isFinal 时已上报
   const endVoiceSession = useCallback(() => {
     setIsInVoiceSession(false)
+    setIsRecordingInput(false)
     setAsrInterimText('')
     setAsrFinalText('')
     finalTextRef.current = ''
@@ -166,6 +173,7 @@ export function useVoiceChat(options: VoiceChatOptions): UseVoiceChatReturn {
 
   return {
     isInVoiceSession,
+    isRecordingInput,
     asrInterimText,
     asrFinalText,
     aiResponseText: voiceSession.aiResponseText,

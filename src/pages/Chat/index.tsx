@@ -106,18 +106,13 @@ const Chat: React.FC = () => {
     onUserTranscript: text => chat.appendCompletedMessage('user', text),
     onAiResponseFinalized: text => chat.appendCompletedMessage('assistant', text),
   })
-  const { isConnected: isVoiceConnected, endVoiceSession } = voiceChat
 
   const handlePronunciationAnalysisChange = useCallback(
     (enabled: boolean) => {
+      // 只更新下一轮录音期望配置；若当前会话配置不同，VoiceRecorder 会在下次录音前重建会话。
       setPronunciationAnalysisEnabled(enabled)
-
-      if (isVoiceConnected) {
-        // Realtime 的 system_role 只在会话启动时生效，切换开关后重开下一次语音会话。
-        endVoiceSession()
-      }
     },
-    [endVoiceSession, isVoiceConnected]
+    []
   )
 
   // 自动滚动到底部

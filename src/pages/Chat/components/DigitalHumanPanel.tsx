@@ -38,20 +38,10 @@ export const DigitalHumanPanel: React.FC<DigitalHumanPanelProps> = ({
         </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 shadow-sm">
-          <div className="text-2xl font-bold text-blue-600">12</div>
-          <div className="text-xs text-slate-500">对话次数</div>
-        </div>
-        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 shadow-sm">
-          <div className="text-2xl font-bold text-green-600">85%</div>
-          <div className="text-xs text-slate-500">准确率</div>
-        </div>
-        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 shadow-sm">
-          <div className="text-2xl font-bold text-purple-600">3</div>
-          <div className="text-xs text-slate-500">学习天数</div>
-        </div>
-      </div>
+      <div
+        id="digital-human-voice-controls"
+        className="mt-8 w-full max-w-xs rounded-2xl bg-white/65 p-4 text-center shadow-sm backdrop-blur-sm"
+      />
     </div>
   )
 }
